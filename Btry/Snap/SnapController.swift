@@ -20,9 +20,13 @@ final class SnapController {
     }
 
     /// カーソルがスナップ領域にあれば、その領域とスナップ先のフレームを返す
+    func screen(at point: CGPoint) -> ScreenInfo? {
+        geometry.screens.first { $0.frame.insetBy(dx: -1, dy: -1).contains(point) }
+    }
+
     func zone(at point: CGPoint, includesMaximize: Bool) -> (zone: SnapZone, frame: CGRect)? {
         let screens = geometry.screens
-        guard let screen = screens.first(where: { $0.frame.insetBy(dx: -1, dy: -1).contains(point) }) else { return nil }
+        guard let screen = screen(at: point) else { return nil }
         let frame = screen.frame
         let visible = screen.visibleFrame
 

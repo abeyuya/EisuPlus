@@ -45,6 +45,8 @@ struct Settings: Codable, Equatable, Sendable {
     var snapEnabled = true
     /// 移動中に上端へ持っていくと最大化する
     var snapTopMaximizeEnabled = true
+    /// 移動中に左右の端へ押し付けたまま待つと、隣のデスクトップへ運ぶ
+    var spaceCarryEnabled = true
     /// ウィンドウの移動・リサイズを行わないアプリ
     var excludedBundleIDs: Set<String> = []
 
@@ -72,6 +74,7 @@ extension Settings {
         resizeBinding = try c.decodeIfPresent(GestureBinding.self, forKey: .resizeBinding) ?? d.resizeBinding
         snapEnabled = try c.decodeIfPresent(Bool.self, forKey: .snapEnabled) ?? d.snapEnabled
         snapTopMaximizeEnabled = try c.decodeIfPresent(Bool.self, forKey: .snapTopMaximizeEnabled) ?? d.snapTopMaximizeEnabled
+        spaceCarryEnabled = try c.decodeIfPresent(Bool.self, forKey: .spaceCarryEnabled) ?? d.spaceCarryEnabled
         excludedBundleIDs = try c.decodeIfPresent(Set<String>.self, forKey: .excludedBundleIDs) ?? d.excludedBundleIDs
     }
 }

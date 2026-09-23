@@ -7,6 +7,8 @@ import os
 /// 位置の更新は最新のものだけを反映する（古いものは捨てる）。
 final class WindowOperator: @unchecked Sendable {
     private static let minimumSize = CGSize(width: 120, height: 80)
+    /// 左右の端に押し付けたまま、隣のデスクトップへ運ぶまで待つ時間
+    private static let spaceCarryDelay: TimeInterval = 0.7
 
     private let queue = DispatchQueue(label: "com.abeyuya.btry.window-operator", qos: .userInteractive)
 
@@ -25,6 +27,9 @@ final class WindowOperator: @unchecked Sendable {
         var target: Target?
         /// 移動中にカーソルが入っているスナップ領域
         var snapZone: (zone: SnapZone, frame: CGRect)?
+        /// 押し付けている端の方向と、隣のデスクトップへ運ぶ予約
+        var carryDirection: SpaceDirection?
+        var carryWork: DispatchWorkItem?
     }
 
     init(settings: SettingsSnapshot, geometry: ScreenGeometry, preview: SnapPreviewWindow) {
@@ -85,6 +90,7 @@ final class WindowOperator: @unchecked Sendable {
         case .move:
             target.window.setPosition(CGPoint(x: target.startFrame.minX + dx, y: target.startFrame.minY + dy))
             updateSnapZone(at: point)
+            updateSpaceCarry(at: point)
         case .resize:
             resize(target, dx: dx, dy: dy)
         }
@@ -108,6 +114,50 @@ final class WindowOperator: @unchecked Sendable {
             MainActor.assumeIsolated {
                 if let zone { preview.show(zone.frame) } else { preview.hide() }
             }
+        }
+    }
+
+    /// 左右の端に押し付けたらタイマーを仕掛け、留まり続けたら隣のデスクトップへ運ぶ
+    private func updateSpaceCarry(at point: CGPoint) {
+        var direction: SpaceDirection?
+        if settings.current.spaceCarryEnabled {
+            switch snap.zone(at: point, includesMaximize: false)?.zone {
+            case .leftHalf: direction = .left
+            case .rightHalf: direction = .right
+            default: direction = nil
+            }
+        }
+        guard direction != session?.carryDirection else { return }
+        session?.carryWork?.cancel()
+        session?.carryWork = nil
+        session?.carryDirection = direction
+        guard let direction else { return }
+
+        let work = DispatchWorkItem { [weak self] in self?.carryToNeighborSpace(direction) }
+        session?.carryWork = work
+        queue.asyncAfter(deadline: .now() + Self.spaceCarryDelay, execute: work)
+    }
+
+    private func carryToNeighborSpace(_ direction: SpaceDirection) {
+        guard let session, session.carryDirection == direction, let target = session.target,
+              let cursor = CGEvent(source: nil)?.location,
+              let screen = snap.screen(at: cursor),
+              SpaceCarrier.hasDesktop(direction, at: cursor),
+              let frame = target.window.frame else { return }
+
+        // スナップのプレビューは取り消し、運んだ先で改めて判定する
+        self.session?.snapZone = nil
+        DispatchQueue.main.async { [preview] in
+            MainActor.assumeIsolated { preview.hide() }
+        }
+        SpaceCarrier.carry(windowFrame: frame, screenFrame: screen.frame, direction: direction, restoreCursor: cursor)
+
+        // 運んだ後の位置から追従を続ける。端に押し付けたままなら、次の移動でさらに隣へ運ぶ予約が入る
+        self.session?.carryDirection = nil
+        self.session?.carryWork = nil
+        if let newFrame = target.window.frame {
+            self.session?.target?.startFrame = newFrame
+            self.session?.target?.startMouse = cursor
         }
     }
 
@@ -151,6 +201,7 @@ final class WindowOperator: @unchecked Sendable {
     }
 
     private func finishSession() {
+        session?.carryWork?.cancel()
         if let session, let target = session.target {
             if let zone = session.snapZone {
                 snap.apply(zone.frame, to: target.window, originalSize: target.startFrame.size)
