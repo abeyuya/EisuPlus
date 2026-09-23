@@ -60,6 +60,24 @@ enum WindowLocator {
         return AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, value)
     }
 
+    static func application(of element: AXUIElement) -> AXUIElement {
+        var pid: pid_t = 0
+        AXUIElementGetPid(element, &pid)
+        let app = AXUIElementCreateApplication(pid)
+        AXUIElementSetMessagingTimeout(app, messagingTimeout)
+        return app
+    }
+
+    private static let enhancedUserInterfaceAttribute = "AXEnhancedUserInterface"
+
+    /// AXEnhancedUserInterface を切り替える。無効化時は、もともと有効で実際に無効化できた場合だけ true を返す
+    @discardableResult
+    static func setEnhancedUserInterface(_ enabled: Bool, of app: AXUIElement) -> Bool {
+        if !enabled, boolValue(app, enhancedUserInterfaceAttribute) != true { return false }
+        let value = (enabled ? kCFBooleanTrue : kCFBooleanFalse) as CFTypeRef
+        return AXUIElementSetAttributeValue(app, enhancedUserInterfaceAttribute as CFString, value) == .success
+    }
+
     static func appName(of element: AXUIElement) -> String {
         var pid: pid_t = 0
         AXUIElementGetPid(element, &pid)

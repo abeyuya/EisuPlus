@@ -6,7 +6,9 @@ import os
 @MainActor
 @Observable
 final class SettingsStore {
-    private static let defaultsKey = "settings.v1"
+    private static let defaultsKey = "settings.v2"
+    /// v1 はリサイズのデフォルトが ctrl+option だった
+    private static let legacyDefaultsKeys = ["settings.v1"]
 
     var settings: Settings {
         didSet {
@@ -20,6 +22,7 @@ final class SettingsStore {
     @ObservationIgnored let snapshot: SettingsSnapshot
 
     init() {
+        Self.legacyDefaultsKeys.forEach(UserDefaults.standard.removeObject(forKey:))
         let loaded = UserDefaults.standard.data(forKey: Self.defaultsKey)
             .flatMap { try? JSONDecoder().decode(Settings.self, from: $0) } ?? Settings()
         settings = loaded

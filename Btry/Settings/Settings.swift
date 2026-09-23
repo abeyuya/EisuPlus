@@ -41,7 +41,7 @@ struct Settings: Codable, Equatable, Sendable {
     var moveEnabled = true
     var moveBinding = GestureBinding(modifiers: [.control], trigger: .mouseMove)
     var resizeEnabled = true
-    var resizeBinding = GestureBinding(modifiers: [.control, .option], trigger: .mouseMove)
+    var resizeBinding = GestureBinding(modifiers: [.option], trigger: .mouseMove)
 
     /// 有効なジェスチャのバインド一覧
     var activeBindings: [(mode: GestureMode, binding: GestureBinding)] {
