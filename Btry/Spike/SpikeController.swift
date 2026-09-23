@@ -6,7 +6,7 @@ import Observation
 
 /// フェーズ0 スパイク: macOS 27 で以下が動くかを検証する。
 /// - アクティブな CGEventTap（イベントの握りつぶし）
-/// - AX によるカーソル下ウィンドウの取得と移動（ctrl + 左ドラッグ）
+/// - AX によるカーソル下ウィンドウの取得と移動（ctrl + マウス移動、クリック不要）
 /// - 左右⌘単押しでの英数/かな切り替え（JIS キーイベントの送出）
 ///
 /// 簡単のためタップはメインスレッドの RunLoop で動かす。本実装では専用スレッドに移す。
@@ -51,7 +51,7 @@ final class SpikeController {
     // MARK: - Event tap
 
     private func startTap() {
-        let types: [CGEventType] = [.flagsChanged, .keyDown, .leftMouseDown, .leftMouseDragged, .leftMouseUp, .rightMouseDown]
+        let types: [CGEventType] = [.flagsChanged, .keyDown, .mouseMoved, .leftMouseDown, .rightMouseDown]
         let mask = types.reduce(CGEventMask(0)) { $0 | (1 << $1.rawValue) }
 
         let callback: CGEventTapCallBack = { _, type, event, refcon in
@@ -91,34 +91,27 @@ final class SpikeController {
 
         case .flagsChanged:
             handleCommandTap(event)
+            // ctrl のみ押下中は移動モード。それ以外になったら終了する
+            if event.flags.intersection(Self.relevantFlags) != .maskControl, dragWindow != nil {
+                SpikeLog.write("move end")
+                dragWindow = nil
+            }
             return Unmanaged.passUnretained(event)
 
-        case .keyDown:
+        case .keyDown, .leftMouseDown, .rightMouseDown:
             pendingCommandKey = nil
             return Unmanaged.passUnretained(event)
 
-        case .rightMouseDown:
-            pendingCommandKey = nil
+        case .mouseMoved:
+            guard event.flags.intersection(Self.relevantFlags) == .maskControl else {
+                return Unmanaged.passUnretained(event)
+            }
+            if dragWindow == nil {
+                beginDrag(at: event.location)
+            } else {
+                moveDrag(to: event.location)
+            }
             return Unmanaged.passUnretained(event)
-
-        case .leftMouseDown:
-            pendingCommandKey = nil
-            let flags = event.flags.intersection(Self.relevantFlags)
-            guard flags == .maskControl else { return Unmanaged.passUnretained(event) }
-            beginDrag(at: event.location)
-            // ウィンドウが取れなかったときもクリックは握りつぶす（コンテキストメニュー抑止の検証）
-            return nil
-
-        case .leftMouseDragged:
-            guard dragWindow != nil else { return Unmanaged.passUnretained(event) }
-            moveDrag(to: event.location)
-            return nil
-
-        case .leftMouseUp:
-            guard dragWindow != nil else { return Unmanaged.passUnretained(event) }
-            SpikeLog.write("drag end")
-            dragWindow = nil
-            return nil
 
         default:
             return Unmanaged.passUnretained(event)
@@ -156,11 +149,11 @@ final class SpikeController {
 
     private func beginDrag(at point: CGPoint) {
         guard let window = Self.window(at: point) else {
-            SpikeLog.write("drag begin: no window at \(point)")
+            SpikeLog.write("move begin: no window at \(point)")
             return
         }
         guard let position = Self.position(of: window) else {
-            SpikeLog.write("drag begin: failed to read position")
+            SpikeLog.write("move begin: failed to read position")
             return
         }
         dragWindow = window
@@ -169,7 +162,7 @@ final class SpikeController {
         var pid: pid_t = 0
         AXUIElementGetPid(window, &pid)
         let appName = NSRunningApplication(processIdentifier: pid)?.localizedName ?? "?"
-        SpikeLog.write("drag begin: \(appName) window at \(position)")
+        SpikeLog.write("move begin: \(appName) window at \(position)")
     }
 
     private func moveDrag(to point: CGPoint) {
