@@ -17,7 +17,7 @@ macOS 27 で BetterTouchTool が使えなくなったため、以下の機能を
 | 言語/UI | Swift 6.2 + SwiftUI（設定画面）+ AppKit（オーバーレイ等）。Xcode 26.3 |
 | アプリ形態 | メニューバー常駐アプリ（`LSUIElement=YES`、`MenuBarExtra`）。対象は macOS 15 以降（設定ウィンドウの `defaultLaunchBehavior` のため） |
 | サンドボックス | **無効**。他アプリのウィンドウを Accessibility API で操作するため、サンドボックス内ではできない |
-| 配布 | 自分用なので Notarization は不要 |
+| 配布 | 自分用なので Notarization は不要。Mac App Store 版は別ターゲット（[APP_STORE.md](APP_STORE.md)） |
 | 署名 | **個人の Developer ID Application 証明書（Team `37XL3EDJ44`）で手動署名する**。ad-hoc 署名だとビルドのたびにアクセシビリティ権限がリセットされる。手元の Apple Development 証明書は会社のチームのものなので使わない |
 | プロジェクト管理 | XcodeGen（`project.yml`）を使う。CLI の `xcodebuild` でビルド・確認する |
 | 必要な権限 | アクセシビリティ（イベントの書き換え・握りつぶしと、他アプリのウィンドウ操作に必要） |
