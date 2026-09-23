@@ -13,12 +13,24 @@ final class WindowOperator: @unchecked Sendable {
     /// タップのスレッドとキューの間で受け渡す、最新のカーソル位置
     private let pending = OSAllocatedUnfairLock<(point: CGPoint?, drainScheduled: Bool)>(initialState: (nil, false))
 
+    private let settings: SettingsSnapshot
+    private let preview: SnapPreviewWindow
+
     // 以下はキュー上でのみ触る
     private var session: Session?
+    private let snap: SnapController
 
     private struct Session {
         var mode: GestureMode
         var target: Target?
+        /// 移動中にカーソルが入っているスナップ領域
+        var snapZone: (zone: SnapZone, frame: CGRect)?
+    }
+
+    init(settings: SettingsSnapshot, geometry: ScreenGeometry, preview: SnapPreviewWindow) {
+        self.settings = settings
+        self.preview = preview
+        snap = SnapController(geometry: geometry)
     }
 
     /// 捕まえたウィンドウと、開始時の状態
@@ -77,6 +89,7 @@ final class WindowOperator: @unchecked Sendable {
             if result != .success {
                 Log.window.error("setPosition failed: \(result.rawValue, privacy: .public)")
             }
+            updateSnapZone(at: point)
         case .resize:
             resize(target, dx: dx, dy: dy)
         }
@@ -94,13 +107,42 @@ final class WindowOperator: @unchecked Sendable {
         }
     }
 
+    private func updateSnapZone(at point: CGPoint) {
+        let zone = settings.current.snapEnabled ? snap.zone(at: point) : nil
+        guard zone?.zone != session?.snapZone?.zone else { return }
+        session?.snapZone = zone
+        DispatchQueue.main.async { [preview] in
+            MainActor.assumeIsolated {
+                if let zone { preview.show(zone.frame) } else { preview.hide() }
+            }
+        }
+    }
+
+    /// スナップしたままのウィンドウを動かし始めたら、スナップ前のサイズに戻す。
+    /// カーソルがウィンドウ内の同じ相対位置に来るよう位置も合わせる
+    private func unsnapIfNeeded(_ window: AXUIElement, frame: CGRect, mouse: CGPoint) -> CGRect {
+        guard let size = snap.unsnapSize(for: window, currentFrame: frame) else { return frame }
+        let ratioX = (mouse.x - frame.minX) / frame.width
+        let offsetY = mouse.y - frame.minY
+        let origin = CGPoint(
+            x: mouse.x - ratioX * size.width,
+            y: offsetY < size.height ? frame.minY : mouse.y - size.height / 2
+        )
+        WindowLocator.setSize(size, of: window)
+        WindowLocator.setPosition(origin, of: window)
+        return CGRect(origin: origin, size: size)
+    }
+
     private func capture(at point: CGPoint) {
         guard let session,
               let window = WindowLocator.window(at: point),
               let position = WindowLocator.position(of: window),
               let size = WindowLocator.size(of: window) else { return }
 
-        let frame = CGRect(origin: position, size: size)
+        var frame = CGRect(origin: position, size: size)
+        if session.mode == .move {
+            frame = unsnapIfNeeded(window, frame: frame, mouse: point)
+        }
         let app = WindowLocator.application(of: window)
         // Chrome などは AXEnhancedUserInterface が有効だとサイズ変更にアニメーションが入って重くなる
         let restoresEnhancedUI = session.mode == .resize && WindowLocator.setEnhancedUserInterface(false, of: app)
@@ -117,6 +159,12 @@ final class WindowOperator: @unchecked Sendable {
 
     private func finishSession() {
         if let session, let target = session.target {
+            if let zone = session.snapZone {
+                snap.apply(zone.frame, to: target.window, originalSize: target.startFrame.size)
+                DispatchQueue.main.async { [preview] in
+                    MainActor.assumeIsolated { preview.hide() }
+                }
+            }
             if target.restoresEnhancedUI {
                 WindowLocator.setEnhancedUserInterface(true, of: target.app)
             }

@@ -22,7 +22,8 @@ final class AppModel {
         let snapshot = settingsStore.snapshot
         tapManager = EventTapManager(handlers: [
             InputSourceSwitcher(settings: snapshot),
-            WindowGestureController(settings: snapshot, windowOperator: WindowOperator()),
+            WindowGestureController(settings: snapshot, windowOperator: WindowOperator(
+                settings: snapshot, geometry: ScreenGeometry(), preview: SnapPreviewWindow())),
         ])
 
         let options = ["AXTrustedCheckOptionPrompt": true] as CFDictionary

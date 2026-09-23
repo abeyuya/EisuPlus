@@ -42,6 +42,7 @@ struct Settings: Codable, Equatable, Sendable {
     var moveBinding = GestureBinding(modifiers: [.control], trigger: .mouseMove)
     var resizeEnabled = true
     var resizeBinding = GestureBinding(modifiers: [.option], trigger: .mouseMove)
+    var snapEnabled = true
 
     /// 有効なジェスチャのバインド一覧
     var activeBindings: [(mode: GestureMode, binding: GestureBinding)] {
@@ -50,6 +51,21 @@ struct Settings: Codable, Equatable, Sendable {
         if moveEnabled { result.append((.move, moveBinding)) }
         if resizeEnabled { result.append((.resize, resizeBinding)) }
         return result
+    }
+}
+
+extension Settings {
+    /// 項目が欠けていてもデフォルト値で補う（項目を追加しても保存済みの設定が消えないように）
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let d = Settings()
+        isPaused = try c.decodeIfPresent(Bool.self, forKey: .isPaused) ?? d.isPaused
+        inputSourceSwitchEnabled = try c.decodeIfPresent(Bool.self, forKey: .inputSourceSwitchEnabled) ?? d.inputSourceSwitchEnabled
+        moveEnabled = try c.decodeIfPresent(Bool.self, forKey: .moveEnabled) ?? d.moveEnabled
+        moveBinding = try c.decodeIfPresent(GestureBinding.self, forKey: .moveBinding) ?? d.moveBinding
+        resizeEnabled = try c.decodeIfPresent(Bool.self, forKey: .resizeEnabled) ?? d.resizeEnabled
+        resizeBinding = try c.decodeIfPresent(GestureBinding.self, forKey: .resizeBinding) ?? d.resizeBinding
+        snapEnabled = try c.decodeIfPresent(Bool.self, forKey: .snapEnabled) ?? d.snapEnabled
     }
 }
 
