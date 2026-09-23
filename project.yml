@@ -1,0 +1,31 @@
+name: Btry
+options:
+  bundleIdPrefix: com.abeyuya
+  deploymentTarget:
+    macOS: "14.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  Btry:
+    type: application
+    platform: macOS
+    sources:
+      - Btry
+    info:
+      path: Btry/Info.plist
+      properties:
+        CFBundleDisplayName: Btry
+        LSUIElement: true
+        LSMinimumSystemVersion: "14.0"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.abeyuya.btry
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "Developer ID Application"
+        DEVELOPMENT_TEAM: 37XL3EDJ44
+        ENABLE_HARDENED_RUNTIME: NO
+        ENABLE_APP_SANDBOX: NO
+        GENERATE_INFOPLIST_FILE: NO
