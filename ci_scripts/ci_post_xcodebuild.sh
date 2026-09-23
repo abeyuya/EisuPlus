@@ -40,14 +40,17 @@ echo "$ASC_KEY_P8_BASE64" | base64 --decode > "$key_path"
 
 # 公証
 ditto -c -k --keepParent "$app_path" "$work_dir/notarize.zip"
+# 失敗時も結果とログを出したいので、ここでは終了コードで止めない
 result="$(xcrun notarytool submit "$work_dir/notarize.zip" --wait --output-format json \
-  --key "$key_path" --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER_ID")"
+  --key "$key_path" --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER_ID")" || true
 echo "$result"
-submission_id="$(echo "$result" | plutil -extract id raw -)"
-status="$(echo "$result" | plutil -extract status raw -)"
+submission_id="$(echo "$result" | plutil -extract id raw - 2>/dev/null)" || submission_id=""
+status="$(echo "$result" | plutil -extract status raw - 2>/dev/null)" || status=""
 if [[ "$status" != "Accepted" ]]; then
-  xcrun notarytool log "$submission_id" \
-    --key "$key_path" --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER_ID" || true
+  if [[ -n "$submission_id" ]]; then
+    xcrun notarytool log "$submission_id" \
+      --key "$key_path" --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER_ID" || true
+  fi
   echo "error: 公証に失敗: $status" >&2
   exit 1
 fi
@@ -63,10 +66,24 @@ api_headers=(
   -H "Accept: application/vnd.github+json"
   -H "X-GitHub-Api-Version: 2022-11-28"
 )
-release="$(curl -sS --fail-with-body "${api_headers[@]}" \
-  -X POST "https://api.github.com/repos/$GITHUB_REPO/releases" \
-  -d "{\"tag_name\":\"$CI_TAG\",\"name\":\"$CI_TAG\",\"generate_release_notes\":true}")"
-release_id="$(echo "$release" | plutil -extract id raw -)"
+# Rebuild 時などに備え、同じタグの Release があれば再利用し、同名の asset は置き換える
+if release="$(curl -sS --fail "${api_headers[@]}" \
+  "https://api.github.com/repos/$GITHUB_REPO/releases/tags/$CI_TAG")"; then
+  release_id="$(echo "$release" | plutil -extract id raw -)"
+  asset_count="$(echo "$release" | plutil -extract assets raw -)"
+  for (( i = 0; i < asset_count; i++ )); do
+    if [[ "$(echo "$release" | plutil -extract "assets.$i.name" raw -)" == "$asset_name" ]]; then
+      asset_id="$(echo "$release" | plutil -extract "assets.$i.id" raw -)"
+      curl -sS --fail-with-body "${api_headers[@]}" -X DELETE \
+        "https://api.github.com/repos/$GITHUB_REPO/releases/assets/$asset_id"
+    fi
+  done
+else
+  release="$(curl -sS --fail-with-body "${api_headers[@]}" \
+    -X POST "https://api.github.com/repos/$GITHUB_REPO/releases" \
+    -d "{\"tag_name\":\"$CI_TAG\",\"name\":\"$CI_TAG\",\"generate_release_notes\":true}")"
+  release_id="$(echo "$release" | plutil -extract id raw -)"
+fi
 
 curl -sS --fail-with-body "${api_headers[@]}" \
   -H "Content-Type: application/zip" \
