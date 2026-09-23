@@ -1,6 +1,6 @@
-name: Btry
+name: EisuMod
 options:
-  bundleIdPrefix: com.abeyuya
+  bundleIdPrefix: com.github.abeyuya
   deploymentTarget:
     macOS: "15.0"
 settings:
@@ -9,20 +9,20 @@ settings:
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
 targets:
-  Btry:
+  EisuMod:
     type: application
     platform: macOS
     sources:
-      - Btry
+      - EisuMod
     info:
-      path: Btry/Info.plist
+      path: EisuMod/Info.plist
       properties:
-        CFBundleDisplayName: Btry
+        CFBundleDisplayName: EisuMod
         LSUIElement: true
         LSMinimumSystemVersion: "15.0"
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.abeyuya.btry
+        PRODUCT_BUNDLE_IDENTIFIER: com.github.abeyuya.EisuMod
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_IDENTITY: "Developer ID Application"
         DEVELOPMENT_TEAM: 37XL3EDJ44

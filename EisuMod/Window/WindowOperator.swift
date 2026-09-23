@@ -10,7 +10,7 @@ final class WindowOperator: @unchecked Sendable {
     /// 左右の端に押し付けたまま、隣のデスクトップへ運ぶまで待つ時間
     private static let spaceCarryDelay: TimeInterval = 0.7
 
-    private let queue = DispatchQueue(label: "com.abeyuya.btry.window-operator", qos: .userInteractive)
+    private let queue = DispatchQueue(label: "com.github.abeyuya.EisuMod.window-operator", qos: .userInteractive)
 
     /// タップのスレッドとキューの間で受け渡す、最新のカーソル位置
     private let pending = OSAllocatedUnfairLock<(point: CGPoint?, drainScheduled: Bool)>(initialState: (nil, false))

@@ -73,7 +73,7 @@ final class EventTapManager: @unchecked Sendable {
             if let tap { CGEvent.tapEnable(tap: tap, enable: true) }
             return Unmanaged.passUnretained(event)
         }
-        // Btry 自身が合成したイベント（隣のデスクトップへ運ぶ操作など）は判定に使わない
+        // EisuMod 自身が合成したイベント（隣のデスクトップへ運ぶ操作など）は判定に使わない
         if event.getIntegerValueField(.eventSourceUserData) == SpaceCarrier.syntheticEventMarker {
             return Unmanaged.passUnretained(event)
         }
@@ -93,7 +93,7 @@ private final class EventTapThread: Thread, @unchecked Sendable {
 
     override init() {
         super.init()
-        name = "com.abeyuya.btry.eventtap"
+        name = "com.github.abeyuya.EisuMod.eventtap"
         qualityOfService = .userInteractive
     }
 
