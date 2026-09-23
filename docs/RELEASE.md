@@ -10,6 +10,18 @@ git push origin v0.2.0
 - `ci_scripts/ci_post_clone.sh`: xcodegen で xcodeproj を生成。タグからバージョン (`MARKETING_VERSION`)、`CI_BUILD_NUMBER` からビルド番号を設定
 - `ci_scripts/ci_post_xcodebuild.sh`: Developer ID 署名済みアプリを notarytool で公証・staple し、`EisuMod-<version>.zip` を GitHub Release にアップロード
 
+## リリース PR
+
+`main` に push されると GitHub Actions (`.github/workflows/create-release-pr.yml`) が [git-pr-release](https://github.com/x-motemen/git-pr-release) で `main` → `release/production` のリリース PR を作成・更新する。PR 本文には前回リリース以降に `main` へマージされた PR がチェックリストで並ぶ。
+
+初回のみ以下の準備が必要。
+
+- `release/production` ブランチを作成しておく (git-pr-release は存在しないブランチへの PR を作れない)
+  ```sh
+  git push origin v0.1.0:refs/heads/release/production   # 直近リリースのタグから切る
+  ```
+- Settings → Actions → General → Workflow permissions で **Allow GitHub Actions to create and approve pull requests** を有効にする
+
 ## 他の Mac へのインストール
 
 private リポジトリなので `gh auth login` 済みであること。
