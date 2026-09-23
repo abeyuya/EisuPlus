@@ -5,7 +5,9 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 xcodegen generate -q
-xcodebuild -project EisuMod.xcodeproj -scheme EisuMod -configuration Release -destination 'platform=macOS,arch=arm64' -derivedDataPath build -quiet build
+xcodebuild -project EisuMod.xcodeproj -scheme EisuMod -configuration Release -destination 'platform=macOS,arch=arm64' -derivedDataPath build -quiet \
+  CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="Developer ID Application" \
+  build
 
 osascript -e 'quit app "EisuMod"' 2>/dev/null || true
 sleep 1

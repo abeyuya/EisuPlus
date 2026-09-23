@@ -20,12 +20,23 @@ targets:
         CFBundleDisplayName: EisuMod
         LSUIElement: true
         LSMinimumSystemVersion: "15.0"
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.github.abeyuya.EisuMod
-        CODE_SIGN_STYLE: Manual
-        CODE_SIGN_IDENTITY: "Developer ID Application"
+        # Xcode Cloud のクラウド署名は自動署名が前提。ローカルの scripts/install.sh では Developer ID に上書きする
+        CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: 37XL3EDJ44
-        ENABLE_HARDENED_RUNTIME: NO
+        # 公証 (notarization) に必須
+        ENABLE_HARDENED_RUNTIME: YES
         ENABLE_APP_SANDBOX: NO
         GENERATE_INFOPLIST_FILE: NO
+schemes:
+  # Xcode Cloud は共有スキームが必要
+  EisuMod:
+    build:
+      targets:
+        EisuMod: all
+    archive:
+      config: Release
