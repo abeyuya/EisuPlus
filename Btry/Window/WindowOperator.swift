@@ -100,7 +100,8 @@ final class WindowOperator: @unchecked Sendable {
     }
 
     private func updateSnapZone(at point: CGPoint) {
-        let zone = settings.current.snapEnabled ? snap.zone(at: point) : nil
+        let current = settings.current
+        let zone = current.snapEnabled ? snap.zone(at: point, includesMaximize: current.snapTopMaximizeEnabled) : nil
         guard zone?.zone != session?.snapZone?.zone else { return }
         session?.snapZone = zone
         DispatchQueue.main.async { [preview] in

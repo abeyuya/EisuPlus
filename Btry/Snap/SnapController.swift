@@ -1,7 +1,7 @@
 import Foundation
 
 enum SnapZone: Equatable, Sendable {
-    case leftHalf, rightHalf
+    case leftHalf, rightHalf, maximize
 }
 
 /// 画面端の判定とスナップ先の計算、スナップ前のサイズの記録を行う。WindowOperator のキュー上でのみ使う。
@@ -20,7 +20,7 @@ final class SnapController {
     }
 
     /// カーソルがスナップ領域にあれば、その領域とスナップ先のフレームを返す
-    func zone(at point: CGPoint) -> (zone: SnapZone, frame: CGRect)? {
+    func zone(at point: CGPoint, includesMaximize: Bool) -> (zone: SnapZone, frame: CGRect)? {
         let screens = geometry.screens
         guard let screen = screens.first(where: { $0.frame.insetBy(dx: -1, dy: -1).contains(point) }) else { return nil }
         let frame = screen.frame
@@ -30,6 +30,9 @@ final class SnapController {
         func hasNeighbor(where touches: (CGRect) -> Bool) -> Bool {
             screens.contains { touches($0.frame) && ($0.frame.minY...$0.frame.maxY).contains(point.y) }
         }
+        func hasNeighborAbove() -> Bool {
+            screens.contains { abs($0.frame.maxY - frame.minY) < 1 && ($0.frame.minX...$0.frame.maxX).contains(point.x) }
+        }
 
         let half = visible.width / 2
         if point.x <= frame.minX + Self.edgeThreshold, !hasNeighbor(where: { abs($0.maxX - frame.minX) < 1 }) {
@@ -37,6 +40,10 @@ final class SnapController {
         }
         if point.x >= frame.maxX - Self.edgeThreshold - 1, !hasNeighbor(where: { abs($0.minX - frame.maxX) < 1 }) {
             return (.rightHalf, CGRect(x: visible.minX + half, y: visible.minY, width: visible.width - half, height: visible.height))
+        }
+        // 角では左右半分を優先する
+        if includesMaximize, point.y <= frame.minY + Self.edgeThreshold, !hasNeighborAbove() {
+            return (.maximize, visible)
         }
         return nil
     }

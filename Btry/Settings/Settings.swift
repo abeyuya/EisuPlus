@@ -43,6 +43,8 @@ struct Settings: Codable, Equatable, Sendable {
     var resizeEnabled = true
     var resizeBinding = GestureBinding(modifiers: [.option], trigger: .mouseMove)
     var snapEnabled = true
+    /// 移動中に上端へ持っていくと最大化する
+    var snapTopMaximizeEnabled = true
     /// ウィンドウの移動・リサイズを行わないアプリ
     var excludedBundleIDs: Set<String> = []
 
@@ -69,6 +71,7 @@ extension Settings {
         resizeEnabled = try c.decodeIfPresent(Bool.self, forKey: .resizeEnabled) ?? d.resizeEnabled
         resizeBinding = try c.decodeIfPresent(GestureBinding.self, forKey: .resizeBinding) ?? d.resizeBinding
         snapEnabled = try c.decodeIfPresent(Bool.self, forKey: .snapEnabled) ?? d.snapEnabled
+        snapTopMaximizeEnabled = try c.decodeIfPresent(Bool.self, forKey: .snapTopMaximizeEnabled) ?? d.snapTopMaximizeEnabled
         excludedBundleIDs = try c.decodeIfPresent(Set<String>.self, forKey: .excludedBundleIDs) ?? d.excludedBundleIDs
     }
 }

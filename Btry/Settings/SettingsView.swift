@@ -26,6 +26,8 @@ struct SettingsView: View {
                     .disabled(!settings.moveEnabled)
                 Toggle("画面の左端・右端で左半分・右半分にスナップ", isOn: $settings.snapEnabled)
                     .disabled(!settings.moveEnabled)
+                Toggle("画面の上端で最大化", isOn: $settings.snapTopMaximizeEnabled)
+                    .disabled(!settings.moveEnabled || !settings.snapEnabled)
             }
 
             Section("ウィンドウリサイズ（右下の角を動かす）") {

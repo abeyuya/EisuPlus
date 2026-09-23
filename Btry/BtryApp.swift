@@ -43,7 +43,7 @@ private struct MenuContent: View {
         Toggle("⌘単押しで英数/かな", isOn: $settings.inputSourceSwitchEnabled)
         Toggle("ウィンドウ移動（\(settings.moveBinding.label)）", isOn: $settings.moveEnabled)
         Toggle("ウィンドウリサイズ（\(settings.resizeBinding.label)）", isOn: $settings.resizeEnabled)
-        Toggle("移動中の画面端スナップ（左右半分）", isOn: $settings.snapEnabled)
+        Toggle("移動中の画面端スナップ", isOn: $settings.snapEnabled)
 
         Divider()
 
