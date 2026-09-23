@@ -2,7 +2,7 @@ name: Btry
 options:
   bundleIdPrefix: com.abeyuya
   deploymentTarget:
-    macOS: "14.0"
+    macOS: "15.0"
 settings:
   base:
     SWIFT_VERSION: "6.0"
@@ -19,7 +19,7 @@ targets:
       properties:
         CFBundleDisplayName: Btry
         LSUIElement: true
-        LSMinimumSystemVersion: "14.0"
+        LSMinimumSystemVersion: "15.0"
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.abeyuya.btry

@@ -48,8 +48,9 @@ struct Settings: Codable, Equatable, Sendable {
     var activeBindings: [(mode: GestureMode, binding: GestureBinding)] {
         guard !isPaused else { return [] }
         var result: [(GestureMode, GestureBinding)] = []
-        if moveEnabled { result.append((.move, moveBinding)) }
-        if resizeEnabled { result.append((.resize, resizeBinding)) }
+        // 修飾キーが空だとマウスを動かすだけで発動してしまうので無効扱いにする
+        if moveEnabled, !moveBinding.modifiers.isEmpty { result.append((.move, moveBinding)) }
+        if resizeEnabled, !resizeBinding.modifiers.isEmpty { result.append((.resize, resizeBinding)) }
         return result
     }
 }

@@ -8,12 +8,23 @@ struct BtryApp: App {
         MenuBarExtra("Btry", systemImage: model.settingsStore.settings.isPaused ? "keyboard.badge.ellipsis" : "keyboard") {
             MenuContent(model: model, settings: Bindable(model.settingsStore).settings)
         }
+
+        Window("Btry 設定", id: SettingsView.windowID) {
+            SettingsView(settings: Bindable(model.settingsStore).settings)
+        }
+        .windowResizability(.contentSize)
+        .defaultLaunchBehavior(.suppressed)
     }
+}
+
+extension SettingsView {
+    static let windowID = "settings"
 }
 
 private struct MenuContent: View {
     let model: AppModel
     @Binding var settings: Settings
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         switch model.status {
@@ -36,28 +47,12 @@ private struct MenuContent: View {
 
         Divider()
 
+        Button("設定…") {
+            openWindow(id: SettingsView.windowID)
+            NSApplication.shared.activate()
+        }
+        .keyboardShortcut(",")
         Button("終了") { NSApplication.shared.terminate(nil) }
             .keyboardShortcut("q")
-    }
-}
-
-private extension GestureBinding {
-    var label: String {
-        let order: [Modifier] = [.function, .control, .option, .shift, .command]
-        let symbols = order.filter(modifiers.contains).map { modifier in
-            switch modifier {
-            case .function: "fn"
-            case .control: "⌃"
-            case .option: "⌥"
-            case .shift: "⇧"
-            case .command: "⌘"
-            }
-        }.joined()
-        let action = switch trigger {
-        case .mouseMove: "マウス移動"
-        case .leftDrag: "左ドラッグ"
-        case .rightDrag: "右ドラッグ"
-        }
-        return "\(symbols) + \(action)"
     }
 }
