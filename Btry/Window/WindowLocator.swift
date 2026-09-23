@@ -1,0 +1,94 @@
+@preconcurrency import ApplicationServices
+import AppKit
+
+/// AX まわりのヘルパー。座標は AX / CGEvent と同じ左上原点のグローバル座標。
+enum WindowLocator {
+    private static let messagingTimeout: Float = 0.25
+
+    /// 指定位置にある、操作対象にできるウィンドウを返す
+    static func window(at point: CGPoint) -> AXUIElement? {
+        let systemWide = AXUIElementCreateSystemWide()
+        AXUIElementSetMessagingTimeout(systemWide, messagingTimeout)
+
+        var element: AXUIElement?
+        guard AXUIElementCopyElementAtPosition(systemWide, Float(point.x), Float(point.y), &element) == .success,
+              let element else { return nil }
+
+        let window: AXUIElement
+        if stringValue(element, kAXRoleAttribute) == kAXWindowRole as String {
+            window = element
+        } else if let found: AXUIElement = elementValue(element, kAXWindowAttribute) {
+            window = found
+        } else {
+            return nil
+        }
+
+        var pid: pid_t = 0
+        AXUIElementGetPid(window, &pid)
+        guard pid != ProcessInfo.processInfo.processIdentifier else { return nil }
+        if boolValue(window, "AXFullScreen") == true { return nil }
+
+        AXUIElementSetMessagingTimeout(window, messagingTimeout)
+        return window
+    }
+
+    static func position(of window: AXUIElement) -> CGPoint? {
+        var point = CGPoint.zero
+        guard let value: AXValue = axValue(window, kAXPositionAttribute),
+              AXValueGetValue(value, .cgPoint, &point) else { return nil }
+        return point
+    }
+
+    static func size(of window: AXUIElement) -> CGSize? {
+        var size = CGSize.zero
+        guard let value: AXValue = axValue(window, kAXSizeAttribute),
+              AXValueGetValue(value, .cgSize, &size) else { return nil }
+        return size
+    }
+
+    @discardableResult
+    static func setPosition(_ point: CGPoint, of window: AXUIElement) -> AXError {
+        var point = point
+        guard let value = AXValueCreate(.cgPoint, &point) else { return .failure }
+        return AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, value)
+    }
+
+    @discardableResult
+    static func setSize(_ size: CGSize, of window: AXUIElement) -> AXError {
+        var size = size
+        guard let value = AXValueCreate(.cgSize, &size) else { return .failure }
+        return AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, value)
+    }
+
+    static func appName(of element: AXUIElement) -> String {
+        var pid: pid_t = 0
+        AXUIElementGetPid(element, &pid)
+        return NSRunningApplication(processIdentifier: pid)?.localizedName ?? "pid \(pid)"
+    }
+
+    // MARK: - Attribute helpers
+
+    private static func copyValue(_ element: AXUIElement, _ attribute: String) -> CFTypeRef? {
+        var value: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(element, attribute as CFString, &value) == .success else { return nil }
+        return value
+    }
+
+    private static func stringValue(_ element: AXUIElement, _ attribute: String) -> String? {
+        copyValue(element, attribute) as? String
+    }
+
+    private static func boolValue(_ element: AXUIElement, _ attribute: String) -> Bool? {
+        (copyValue(element, attribute) as? NSNumber)?.boolValue
+    }
+
+    private static func elementValue(_ element: AXUIElement, _ attribute: String) -> AXUIElement? {
+        guard let value = copyValue(element, attribute), CFGetTypeID(value) == AXUIElementGetTypeID() else { return nil }
+        return (value as! AXUIElement)
+    }
+
+    private static func axValue(_ element: AXUIElement, _ attribute: String) -> AXValue? {
+        guard let value = copyValue(element, attribute), CFGetTypeID(value) == AXValueGetTypeID() else { return nil }
+        return (value as! AXValue)
+    }
+}
