@@ -43,6 +43,8 @@ struct Settings: Codable, Equatable, Sendable {
     var resizeEnabled = true
     var resizeBinding = GestureBinding(modifiers: [.option], trigger: .mouseMove)
     var snapEnabled = true
+    /// ウィンドウの移動・リサイズを行わないアプリ
+    var excludedBundleIDs: Set<String> = []
 
     /// 有効なジェスチャのバインド一覧
     var activeBindings: [(mode: GestureMode, binding: GestureBinding)] {
@@ -67,6 +69,7 @@ extension Settings {
         resizeEnabled = try c.decodeIfPresent(Bool.self, forKey: .resizeEnabled) ?? d.resizeEnabled
         resizeBinding = try c.decodeIfPresent(GestureBinding.self, forKey: .resizeBinding) ?? d.resizeBinding
         snapEnabled = try c.decodeIfPresent(Bool.self, forKey: .snapEnabled) ?? d.snapEnabled
+        excludedBundleIDs = try c.decodeIfPresent(Set<String>.self, forKey: .excludedBundleIDs) ?? d.excludedBundleIDs
     }
 }
 

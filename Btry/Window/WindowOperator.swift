@@ -135,7 +135,7 @@ final class WindowOperator: @unchecked Sendable {
 
     private func capture(at point: CGPoint) {
         guard let session,
-              let window = WindowLocator.window(at: point),
+              let window = WindowLocator.window(at: point, excludedBundleIDs: settings.current.excludedBundleIDs),
               let position = WindowLocator.position(of: window),
               let size = WindowLocator.size(of: window) else { return }
 

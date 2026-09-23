@@ -1,12 +1,19 @@
+import AppKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @Binding var settings: Settings
+    @State private var loginItem = LoginItem()
 
     var body: some View {
         Form {
             Section {
                 Toggle("一時停止", isOn: $settings.isPaused)
+                Toggle("ログイン時に起動", isOn: Binding(get: { loginItem.isEnabled }, set: { loginItem.setEnabled($0) }))
+                if let error = loginItem.errorMessage {
+                    Text(error).font(.caption).foregroundStyle(.red)
+                }
             }
 
             Section("入力切り替え") {
@@ -27,6 +34,10 @@ struct SettingsView: View {
                     .disabled(!settings.resizeEnabled)
             }
 
+            Section("除外アプリ（移動・リサイズ・スナップをしない）") {
+                ExcludedAppsEditor(bundleIDs: $settings.excludedBundleIDs)
+            }
+
             let warnings = settings.bindingWarnings
             if !warnings.isEmpty {
                 Section {
@@ -40,6 +51,71 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .frame(width: 460)
         .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+private struct ExcludedAppsEditor: View {
+    @Binding var bundleIDs: Set<String>
+
+    var body: some View {
+        ForEach(bundleIDs.sorted(), id: \.self) { bundleID in
+            HStack {
+                AppLabel(bundleID: bundleID)
+                Spacer()
+                Button {
+                    bundleIDs.remove(bundleID)
+                } label: {
+                    Image(systemName: "minus.circle.fill").foregroundStyle(.secondary)
+                }
+                .buttonStyle(.borderless)
+                .help("除外を解除")
+            }
+        }
+        HStack {
+            Menu("起動中のアプリから追加") {
+                ForEach(runningApps, id: \.bundleID) { app in
+                    Button(app.name) { bundleIDs.insert(app.bundleID) }
+                }
+            }
+            .fixedSize()
+            Button("アプリを選んで追加…", action: chooseApp)
+        }
+    }
+
+    private var runningApps: [(name: String, bundleID: String)] {
+        NSWorkspace.shared.runningApplications
+            .filter { $0.activationPolicy == .regular && $0.bundleIdentifier != Bundle.main.bundleIdentifier }
+            .compactMap { app in app.bundleIdentifier.map { (app.localizedName ?? $0, $0) } }
+            .filter { !bundleIDs.contains($0.1) }
+            .sorted { $0.0.localizedStandardCompare($1.0) == .orderedAscending }
+    }
+
+    private func chooseApp() {
+        let panel = NSOpenPanel()
+        panel.directoryURL = URL(fileURLWithPath: "/Applications")
+        panel.allowedContentTypes = [.application]
+        panel.allowsMultipleSelection = true
+        guard panel.runModal() == .OK else { return }
+        for url in panel.urls {
+            if let bundleID = Bundle(url: url)?.bundleIdentifier { bundleIDs.insert(bundleID) }
+        }
+    }
+}
+
+private struct AppLabel: View {
+    let bundleID: String
+
+    var body: some View {
+        let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID)
+        HStack(spacing: 6) {
+            if let url {
+                Image(nsImage: NSWorkspace.shared.icon(forFile: url.path))
+                    .resizable()
+                    .frame(width: 16, height: 16)
+            }
+            Text(url.map { FileManager.default.displayName(atPath: $0.path) } ?? bundleID)
+        }
+        .help(bundleID)
     }
 }
 

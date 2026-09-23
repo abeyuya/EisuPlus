@@ -5,11 +5,17 @@ import AppKit
 enum WindowLocator {
     private static let messagingTimeout: Float = 0.25
 
-    /// 指定位置にある、操作対象にできるウィンドウを返す
-    static func window(at point: CGPoint) -> AXUIElement? {
+    /// 指定位置にある、操作対象にできるウィンドウを返す。excludedBundleIDs のアプリのウィンドウは対象外
+    static func window(at point: CGPoint, excludedBundleIDs: Set<String> = []) -> AXUIElement? {
         // 自アプリへの AX 問い合わせは呼び出し元スレッドで処理され、SwiftUI がメインスレッド外で動いてクラッシュする。
         // そのため AX を呼ぶ前に、ウィンドウサーバーの情報で自アプリのウィンドウかどうかを判定する
-        guard topmostWindowOwner(at: point) != ProcessInfo.processInfo.processIdentifier else { return nil }
+        let owner = topmostWindowOwner(at: point)
+        guard owner != ProcessInfo.processInfo.processIdentifier else { return nil }
+        if let owner, !excludedBundleIDs.isEmpty,
+           let bundleID = NSRunningApplication(processIdentifier: owner)?.bundleIdentifier,
+           excludedBundleIDs.contains(bundleID) {
+            return nil
+        }
 
         let systemWide = AXUIElementCreateSystemWide()
         AXUIElementSetMessagingTimeout(systemWide, messagingTimeout)
