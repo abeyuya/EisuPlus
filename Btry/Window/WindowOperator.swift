@@ -35,12 +35,11 @@ final class WindowOperator: @unchecked Sendable {
 
     /// 捕まえたウィンドウと、開始時の状態
     private struct Target {
-        var window: AXUIElement
-        var app: AXUIElement
+        var window: WindowHandle
+        /// AXEnhancedUserInterface を戻す対象のアプリ（他アプリのリサイズ時のみ）
+        var app: AXUIElement?
         var startMouse: CGPoint
         var startFrame: CGRect
-        /// 一時的に無効化した AXEnhancedUserInterface（終了時に戻す）
-        var restoresEnhancedUI: Bool
     }
 
     func begin(mode: GestureMode, at point: CGPoint) {
@@ -84,11 +83,7 @@ final class WindowOperator: @unchecked Sendable {
         let dy = point.y - target.startMouse.y
         switch session.mode {
         case .move:
-            let result = WindowLocator.setPosition(
-                CGPoint(x: target.startFrame.minX + dx, y: target.startFrame.minY + dy), of: target.window)
-            if result != .success {
-                Log.window.error("setPosition failed: \(result.rawValue, privacy: .public)")
-            }
+            target.window.setPosition(CGPoint(x: target.startFrame.minX + dx, y: target.startFrame.minY + dy))
             updateSnapZone(at: point)
         case .resize:
             resize(target, dx: dx, dy: dy)
@@ -101,10 +96,7 @@ final class WindowOperator: @unchecked Sendable {
             width: max(Self.minimumSize.width, target.startFrame.width + dx),
             height: max(Self.minimumSize.height, target.startFrame.height + dy)
         )
-        let result = WindowLocator.setSize(size, of: target.window)
-        if result != .success {
-            Log.window.error("setSize failed: \(result.rawValue, privacy: .public)")
-        }
+        target.window.setSize(size)
     }
 
     private func updateSnapZone(at point: CGPoint) {
@@ -120,7 +112,7 @@ final class WindowOperator: @unchecked Sendable {
 
     /// スナップしたままのウィンドウを動かし始めたら、スナップ前のサイズに戻す。
     /// カーソルがウィンドウ内の同じ相対位置に来るよう位置も合わせる
-    private func unsnapIfNeeded(_ window: AXUIElement, frame: CGRect, mouse: CGPoint) -> CGRect {
+    private func unsnapIfNeeded(_ window: WindowHandle, frame: CGRect, mouse: CGPoint) -> CGRect {
         guard let size = snap.unsnapSize(for: window, currentFrame: frame) else { return frame }
         let ratioX = (mouse.x - frame.minX) / frame.width
         let offsetY = mouse.y - frame.minY
@@ -128,33 +120,33 @@ final class WindowOperator: @unchecked Sendable {
             x: mouse.x - ratioX * size.width,
             y: offsetY < size.height ? frame.minY : mouse.y - size.height / 2
         )
-        WindowLocator.setSize(size, of: window)
-        WindowLocator.setPosition(origin, of: window)
-        return CGRect(origin: origin, size: size)
+        window.setSize(size)
+        window.setPosition(origin)
+        return window.frame ?? CGRect(origin: origin, size: size)
     }
 
     private func capture(at point: CGPoint) {
         guard let session,
               let window = WindowLocator.window(at: point, excludedBundleIDs: settings.current.excludedBundleIDs),
-              let position = WindowLocator.position(of: window),
-              let size = WindowLocator.size(of: window) else { return }
+              var frame = window.frame else { return }
 
-        var frame = CGRect(origin: position, size: size)
         if session.mode == .move {
             frame = unsnapIfNeeded(window, frame: frame, mouse: point)
         }
-        let app = WindowLocator.application(of: window)
         // Chrome などは AXEnhancedUserInterface が有効だとサイズ変更にアニメーションが入って重くなる
-        let restoresEnhancedUI = session.mode == .resize && WindowLocator.setEnhancedUserInterface(false, of: app)
+        var app: AXUIElement?
+        if session.mode == .resize, case .accessibility(let element) = window {
+            let application = WindowLocator.application(of: element)
+            if WindowLocator.setEnhancedUserInterface(false, of: application) { app = application }
+        }
 
         self.session?.target = Target(
             window: window,
             app: app,
             startMouse: point,
-            startFrame: frame,
-            restoresEnhancedUI: restoresEnhancedUI
+            startFrame: frame
         )
-        Log.window.debug("\(session.mode.rawValue, privacy: .public) begin: \(WindowLocator.appName(of: window), privacy: .public)")
+        Log.window.debug("\(session.mode.rawValue, privacy: .public) begin: \(window.appName, privacy: .public)")
     }
 
     private func finishSession() {
@@ -165,10 +157,10 @@ final class WindowOperator: @unchecked Sendable {
                     MainActor.assumeIsolated { preview.hide() }
                 }
             }
-            if target.restoresEnhancedUI {
-                WindowLocator.setEnhancedUserInterface(true, of: target.app)
+            if let app = target.app {
+                WindowLocator.setEnhancedUserInterface(true, of: app)
             }
-            Log.window.debug("\(session.mode.rawValue, privacy: .public) end: \(WindowLocator.appName(of: target.window), privacy: .public)")
+            Log.window.debug("\(session.mode.rawValue, privacy: .public) end: \(target.window.appName, privacy: .public)")
         }
         session = nil
     }

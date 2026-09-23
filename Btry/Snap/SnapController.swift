@@ -1,4 +1,3 @@
-@preconcurrency import ApplicationServices
 import Foundation
 
 enum SnapZone: Equatable, Sendable {
@@ -14,7 +13,7 @@ final class SnapController {
     private let geometry: ScreenGeometry
 
     /// スナップしたウィンドウと、スナップ前のサイズ・スナップ後のフレーム
-    private var records: [(window: AXUIElement, originalSize: CGSize, snappedFrame: CGRect)] = []
+    private var records: [(window: WindowHandle, originalSize: CGSize, snappedFrame: CGRect)] = []
 
     init(geometry: ScreenGeometry) {
         self.geometry = geometry
@@ -43,28 +42,28 @@ final class SnapController {
     }
 
     /// スナップを確定する。スナップ前のサイズを記録しておく
-    func apply(_ frame: CGRect, to window: AXUIElement, originalSize: CGSize) {
+    func apply(_ frame: CGRect, to window: WindowHandle, originalSize: CGSize) {
         // 一度解除して再スナップした場合でも、元のサイズを保持する
         let original = takeRecord(for: window)?.originalSize ?? originalSize
         // 移動先ディスプレイの大きさでサイズが制限されることがあるので、サイズ → 位置 → サイズの順に設定する
-        WindowLocator.setSize(frame.size, of: window)
-        WindowLocator.setPosition(frame.origin, of: window)
-        WindowLocator.setSize(frame.size, of: window)
+        window.setSize(frame.size)
+        window.setPosition(frame.origin)
+        window.setSize(frame.size)
 
         records.append((window, original, frame))
         if records.count > Self.maxRecords { records.removeFirst(records.count - Self.maxRecords) }
     }
 
     /// スナップしたままのウィンドウなら記録を取り出してスナップ前のサイズを返す
-    func unsnapSize(for window: AXUIElement, currentFrame: CGRect) -> CGSize? {
+    func unsnapSize(for window: WindowHandle, currentFrame: CGRect) -> CGSize? {
         guard let record = takeRecord(for: window),
               // スナップ後にユーザーが自分でサイズを変えていたら元に戻さない
               Self.isApproximatelyEqual(record.snappedFrame, currentFrame) else { return nil }
         return record.originalSize
     }
 
-    private func takeRecord(for window: AXUIElement) -> (window: AXUIElement, originalSize: CGSize, snappedFrame: CGRect)? {
-        guard let index = records.firstIndex(where: { CFEqual($0.window, window) }) else { return nil }
+    private func takeRecord(for window: WindowHandle) -> (window: WindowHandle, originalSize: CGSize, snappedFrame: CGRect)? {
+        guard let index = records.firstIndex(where: { $0.window.isSame(as: window) }) else { return nil }
         return records.remove(at: index)
     }
 

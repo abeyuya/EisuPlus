@@ -6,11 +6,14 @@ enum WindowLocator {
     private static let messagingTimeout: Float = 0.25
 
     /// 指定位置にある、操作対象にできるウィンドウを返す。excludedBundleIDs のアプリのウィンドウは対象外
-    static func window(at point: CGPoint, excludedBundleIDs: Set<String> = []) -> AXUIElement? {
+    static func window(at point: CGPoint, excludedBundleIDs: Set<String> = []) -> WindowHandle? {
         // 自アプリへの AX 問い合わせは呼び出し元スレッドで処理され、SwiftUI がメインスレッド外で動いてクラッシュする。
-        // そのため AX を呼ぶ前に、ウィンドウサーバーの情報で自アプリのウィンドウかどうかを判定する
-        let owner = topmostWindowOwner(at: point)
-        guard owner != ProcessInfo.processInfo.processIdentifier else { return nil }
+        // そのため AX を呼ぶ前に、ウィンドウサーバーの情報で自アプリのウィンドウかどうかを判定し、自アプリなら NSWindow を直接扱う
+        let topmost = topmostWindow(at: point)
+        let owner = topmost?.pid
+        if let topmost, topmost.pid == ProcessInfo.processInfo.processIdentifier {
+            return OwnWindow.isMovable(topmost.windowNumber) ? .own(windowNumber: topmost.windowNumber) : nil
+        }
         if let owner, !excludedBundleIDs.isEmpty,
            let bundleID = NSRunningApplication(processIdentifier: owner)?.bundleIdentifier,
            excludedBundleIDs.contains(bundleID) {
@@ -36,7 +39,7 @@ enum WindowLocator {
         if boolValue(window, "AXFullScreen") == true { return nil }
 
         AXUIElementSetMessagingTimeout(window, messagingTimeout)
-        return window
+        return .accessibility(window)
     }
 
     static func position(of window: AXUIElement) -> CGPoint? {
@@ -91,17 +94,18 @@ enum WindowLocator {
         return NSRunningApplication(processIdentifier: pid)?.localizedName ?? "pid \(pid)"
     }
 
-    /// 指定位置で最前面にあるウィンドウの所有プロセス
-    private static func topmostWindowOwner(at point: CGPoint) -> pid_t? {
+    /// 指定位置で最前面にあるウィンドウの所有プロセスとウィンドウ番号
+    private static func topmostWindow(at point: CGPoint) -> (pid: pid_t, windowNumber: Int)? {
         guard let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID)
             as? [[String: Any]] else { return nil }
         for info in list {
             guard let pid = info[kCGWindowOwnerPID as String] as? pid_t,
+                  let number = info[kCGWindowNumber as String] as? Int,
                   let boundsDict = info[kCGWindowBounds as String] as? NSDictionary,
                   let bounds = CGRect(dictionaryRepresentation: boundsDict),
                   bounds.contains(point),
                   (info[kCGWindowAlpha as String] as? Double ?? 1) > 0 else { continue }
-            return pid
+            return (pid, number)
         }
         return nil
     }
