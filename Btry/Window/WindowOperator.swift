@@ -142,19 +142,20 @@ final class WindowOperator: @unchecked Sendable {
         guard let session, session.carryDirection == direction, let target = session.target,
               let cursor = CGEvent(source: nil)?.location,
               let screen = snap.screen(at: cursor),
-              SpaceCarrier.hasDesktop(direction, at: cursor),
-              let frame = target.window.frame else { return }
+              SpaceCarrier.hasDesktop(direction, at: cursor) else { return }
 
         // スナップのプレビューは取り消し、運んだ先で改めて判定する
         self.session?.snapZone = nil
         DispatchQueue.main.async { [preview] in
             MainActor.assumeIsolated { preview.hide() }
         }
-        SpaceCarrier.carry(windowFrame: frame, screenFrame: screen.frame, direction: direction, restoreCursor: cursor)
+        let carried = SpaceCarrier.carry(target.window, screen: screen, direction: direction, restoreCursor: cursor)
 
-        // 運んだ後の位置から追従を続ける。端に押し付けたままなら、次の移動でさらに隣へ運ぶ予約が入る
-        self.session?.carryDirection = nil
+        // 運べたら、端に押し付けたままなら次の移動でさらに隣へ運ぶ予約が入るようにする。
+        // 失敗したら端から離れるまで再試行しない（合成クリックを繰り返さないため）
+        if carried { self.session?.carryDirection = nil }
         self.session?.carryWork = nil
+        // 運んだ後の位置から追従を続ける
         if let newFrame = target.window.frame {
             self.session?.target?.startFrame = newFrame
             self.session?.target?.startMouse = cursor

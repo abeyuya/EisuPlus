@@ -1,6 +1,9 @@
 @preconcurrency import ApplicationServices
 import AppKit
 
+@_silgen_name("_AXUIElementGetWindow")
+private func _AXUIElementGetWindow(_ element: AXUIElement, _ id: UnsafeMutablePointer<CGWindowID>) -> AXError
+
 /// AX まわりのヘルパー。座標は AX / CGEvent と同じ左上原点のグローバル座標。
 enum WindowLocator {
     private static let messagingTimeout: Float = 0.25
@@ -40,6 +43,13 @@ enum WindowLocator {
 
         AXUIElementSetMessagingTimeout(window, messagingTimeout)
         return .accessibility(window)
+    }
+
+    static func minimizeButtonFrame(of window: AXUIElement) -> CGRect? {
+        guard let button = elementValue(window, kAXMinimizeButtonAttribute),
+              let position = position(of: button),
+              let size = size(of: button) else { return nil }
+        return CGRect(origin: position, size: size)
     }
 
     static func position(of window: AXUIElement) -> CGPoint? {
@@ -86,6 +96,12 @@ enum WindowLocator {
         if !enabled, boolValue(app, enhancedUserInterfaceAttribute) != true { return false }
         let value = (enabled ? kCFBooleanTrue : kCFBooleanFalse) as CFTypeRef
         return AXUIElementSetAttributeValue(app, enhancedUserInterfaceAttribute as CFString, value) == .success
+    }
+
+    /// AX 要素に対応するウィンドウ番号（非公開 API の _AXUIElementGetWindow）
+    static func windowNumber(of window: AXUIElement) -> Int? {
+        var id: CGWindowID = 0
+        return _AXUIElementGetWindow(window, &id) == .success ? Int(id) : nil
     }
 
     static func appName(of element: AXUIElement) -> String {

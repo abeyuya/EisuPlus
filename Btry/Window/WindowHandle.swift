@@ -52,6 +52,30 @@ enum WindowHandle {
         }
     }
 
+    /// ウィンドウサーバーから見たフレーム。AX の値は Electron 系などで更新が遅れることがあるため、
+    /// 実際に動いたかを確かめるときはこちらを使う
+    var serverFrame: CGRect? {
+        guard let number = windowNumber,
+              let info = (CGWindowListCopyWindowInfo([.optionIncludingWindow], CGWindowID(number)) as? [[String: Any]])?.first,
+              let bounds = info[kCGWindowBounds as String] as? NSDictionary else { return frame }
+        return CGRect(dictionaryRepresentation: bounds)
+    }
+
+    /// 最小化ボタンのフレーム（タイトルバーの中で確実にドラッグできる位置を決めるのに使う）
+    var minimizeButtonFrame: CGRect? {
+        switch self {
+        case .accessibility(let window): WindowLocator.minimizeButtonFrame(of: window)
+        case .own(let number): OwnWindow.minimizeButtonFrame(number)
+        }
+    }
+
+    var windowNumber: Int? {
+        switch self {
+        case .accessibility(let window): WindowLocator.windowNumber(of: window)
+        case .own(let number): number
+        }
+    }
+
     var appName: String {
         switch self {
         case .accessibility(let window): WindowLocator.appName(of: window)
@@ -67,6 +91,14 @@ enum OwnWindow {
         perform(number) { window in
             window.isVisible && window.styleMask.contains(.titled) && !(window is NSPanel)
         } ?? false
+    }
+
+    static func minimizeButtonFrame(_ number: Int) -> CGRect? {
+        perform(number) { window -> CGRect? in
+            guard let button = window.standardWindowButton(.miniaturizeButton), let superview = button.superview else { return nil }
+            let rect = window.convertToScreen(superview.convert(button.frame, to: nil))
+            return CoordinateConverter.toGlobal(rect)
+        } ?? nil
     }
 
     static func frame(_ number: Int) -> CGRect? {
