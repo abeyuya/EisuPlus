@@ -7,6 +7,10 @@ enum WindowLocator {
 
     /// 指定位置にある、操作対象にできるウィンドウを返す
     static func window(at point: CGPoint) -> AXUIElement? {
+        // 自アプリへの AX 問い合わせは呼び出し元スレッドで処理され、SwiftUI がメインスレッド外で動いてクラッシュする。
+        // そのため AX を呼ぶ前に、ウィンドウサーバーの情報で自アプリのウィンドウかどうかを判定する
+        guard topmostWindowOwner(at: point) != ProcessInfo.processInfo.processIdentifier else { return nil }
+
         let systemWide = AXUIElementCreateSystemWide()
         AXUIElementSetMessagingTimeout(systemWide, messagingTimeout)
 
@@ -23,9 +27,6 @@ enum WindowLocator {
             return nil
         }
 
-        var pid: pid_t = 0
-        AXUIElementGetPid(window, &pid)
-        guard pid != ProcessInfo.processInfo.processIdentifier else { return nil }
         if boolValue(window, "AXFullScreen") == true { return nil }
 
         AXUIElementSetMessagingTimeout(window, messagingTimeout)
@@ -82,6 +83,21 @@ enum WindowLocator {
         var pid: pid_t = 0
         AXUIElementGetPid(element, &pid)
         return NSRunningApplication(processIdentifier: pid)?.localizedName ?? "pid \(pid)"
+    }
+
+    /// 指定位置で最前面にあるウィンドウの所有プロセス
+    private static func topmostWindowOwner(at point: CGPoint) -> pid_t? {
+        guard let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID)
+            as? [[String: Any]] else { return nil }
+        for info in list {
+            guard let pid = info[kCGWindowOwnerPID as String] as? pid_t,
+                  let boundsDict = info[kCGWindowBounds as String] as? NSDictionary,
+                  let bounds = CGRect(dictionaryRepresentation: boundsDict),
+                  bounds.contains(point),
+                  (info[kCGWindowAlpha as String] as? Double ?? 1) > 0 else { continue }
+            return pid
+        }
+        return nil
     }
 
     // MARK: - Attribute helpers
