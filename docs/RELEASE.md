@@ -46,7 +46,7 @@ private リポジトリなので `gh auth login` 済みであること。
 - GitHub で fine-grained PAT を発行
   - Repository access: `abeyuya/EisuMod` のみ
   - Permissions: Contents → Read and write
-- Developer ID Application 証明書を `.p12` で書き出す (キーチェーンアクセスで証明書と秘密鍵を選んで書き出し、パスワードを付ける)
+- Developer ID Application 証明書を `.p12` で書き出す: `./scripts/export-developer-id-p12.sh` を実行すると、`DEVELOPER_ID_P12_BASE64` と `DEVELOPER_ID_P12_PASSWORD` の値が順にクリップボードに入る (ファイルは残らない)
   - Xcode Cloud は Developer ID 版を書き出さず (Distribution Preparation に Developer ID がない)、API キーでは Developer ID のクラウド署名もできない。そのため `ci_post_xcodebuild.sh` がこの証明書で archive から Developer ID 版を書き出す
 
 ### 2. ワークフローの作成
@@ -65,8 +65,8 @@ private リポジトリなので `gh auth login` 済みであること。
 | `ASC_ISSUER_ID` | Issuer ID |
 | `ASC_KEY_P8_BASE64` | `base64 -i AuthKey_XXXX.p8 \| pbcopy` の結果 |
 | `GITHUB_RELEASE_TOKEN` | fine-grained PAT |
-| `DEVELOPER_ID_P12_BASE64` | `base64 -i DeveloperID.p12 \| pbcopy` の結果 |
-| `DEVELOPER_ID_P12_PASSWORD` | `.p12` 書き出し時のパスワード |
+| `DEVELOPER_ID_P12_BASE64` | `scripts/export-developer-id-p12.sh` が 1 つ目にクリップボードへ入れる値 |
+| `DEVELOPER_ID_P12_PASSWORD` | 同じく 2 つ目にクリップボードへ入れる値 |
 
 ### 注意
 
