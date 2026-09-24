@@ -68,13 +68,13 @@ result="$(xcrun notarytool submit "$work_dir/notarize.zip" --wait --output-forma
   --key "$key_path" --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER_ID")" || true
 echo "$result"
 submission_id="$(echo "$result" | plutil -extract id raw - 2>/dev/null)" || submission_id=""
-status="$(echo "$result" | plutil -extract status raw - 2>/dev/null)" || status=""
-if [[ "$status" != "Accepted" ]]; then
+notarize_status="$(echo "$result" | plutil -extract status raw - 2>/dev/null)" || notarize_status=""
+if [[ "$notarize_status" != "Accepted" ]]; then
   if [[ -n "$submission_id" ]]; then
     xcrun notarytool log "$submission_id" \
       --key "$key_path" --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER_ID" || true
   fi
-  echo "error: 公証に失敗: $status" >&2
+  echo "error: 公証に失敗: $notarize_status" >&2
   exit 1
 fi
 xcrun stapler staple "$app_path"
