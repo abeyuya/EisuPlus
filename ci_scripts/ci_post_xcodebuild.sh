@@ -26,16 +26,28 @@ work_dir="$(mktemp -d)"
 key_path="$work_dir/AuthKey.p8"
 echo "$ASC_KEY_P8_BASE64" | base64 --decode > "$key_path"
 
-# Xcode Cloud は Deployment Preparation の設定によって Developer ID 版を書き出さない (app-store と development だけになる)。
-# その場合は archive から API キーのクラウド署名で Developer ID 版を書き出す
+# Xcode Cloud の Archive の Distribution Preparation には Developer ID がなく、Developer ID 版は書き出されない。
+# API キーでは Developer ID のクラウド署名もできないので、Secret で渡した Developer ID 証明書で archive から書き出す
 signed_path="${CI_DEVELOPER_ID_SIGNED_APP_PATH:-}"
 if [[ -z "$signed_path" ]]; then
   echo "CI_DEVELOPER_ID_SIGNED_APP_PATH がないので archive から Developer ID で書き出す"
+  keychain="$work_dir/signing.keychain-db"
+  keychain_password="$(uuidgen)"
+  security create-keychain -p "$keychain_password" "$keychain"
+  trap 'security delete-keychain "$keychain" 2>/dev/null || true' EXIT
+  security set-keychain-settings -lut 3600 "$keychain"
+  security unlock-keychain -p "$keychain_password" "$keychain"
+  echo "${DEVELOPER_ID_P12_BASE64:?DEVELOPER_ID_P12_BASE64 がない}" | base64 --decode > "$work_dir/developer-id.p12"
+  security import "$work_dir/developer-id.p12" -k "$keychain" -P "${DEVELOPER_ID_P12_PASSWORD:?DEVELOPER_ID_P12_PASSWORD がない}" \
+    -T /usr/bin/codesign -T /usr/bin/security
+  security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain" > /dev/null
+  # 既存の検索リストの先頭に一時 keychain を足す
+  security list-keychains -d user -s "$keychain" ${(f)"$(security list-keychains -d user | tr -d '" ')"}
+
   signed_path="$work_dir/developer-id"
   xcodebuild -exportArchive -archivePath "${CI_ARCHIVE_PATH:?CI_ARCHIVE_PATH がない}" \
     -exportOptionsPlist "$CI_PRIMARY_REPOSITORY_PATH/Config/ExportOptions-DeveloperID.plist" \
-    -exportPath "$signed_path" -allowProvisioningUpdates \
-    -authenticationKeyPath "$key_path" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+    -exportPath "$signed_path"
 fi
 # signed_path は .app そのもの、または .app を含むディレクトリ
 if [[ "$signed_path" == *.app ]]; then

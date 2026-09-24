@@ -41,12 +41,13 @@ private リポジトリなので `gh auth login` 済みであること。
 
 ### 1. API キー / トークンの用意
 
-- App Store Connect → ユーザとアクセス → 統合 → App Store Connect API でキーを発行 (アクセス: **Admin**)
-  - Xcode Cloud が Developer ID 版を書き出さないとき、`ci_post_xcodebuild.sh` はこのキーのクラウド署名で archive から Developer ID 版を書き出す。Developer ID のクラウド署名は Admin 以上でないとできない
+- App Store Connect → ユーザとアクセス → 統合 → App Store Connect API でキーを発行 (アクセス: Developer)
   - Key ID / Issuer ID / `.p8` ファイルを控える
 - GitHub で fine-grained PAT を発行
   - Repository access: `abeyuya/EisuMod` のみ
   - Permissions: Contents → Read and write
+- Developer ID Application 証明書を `.p12` で書き出す (キーチェーンアクセスで証明書と秘密鍵を選んで書き出し、パスワードを付ける)
+  - Xcode Cloud は Developer ID 版を書き出さず (Distribution Preparation に Developer ID がない)、API キーでは Developer ID のクラウド署名もできない。そのため `ci_post_xcodebuild.sh` がこの証明書で archive から Developer ID 版を書き出す
 
 ### 2. ワークフローの作成
 
@@ -64,6 +65,8 @@ private リポジトリなので `gh auth login` 済みであること。
 | `ASC_ISSUER_ID` | Issuer ID |
 | `ASC_KEY_P8_BASE64` | `base64 -i AuthKey_XXXX.p8 \| pbcopy` の結果 |
 | `GITHUB_RELEASE_TOKEN` | fine-grained PAT |
+| `DEVELOPER_ID_P12_BASE64` | `base64 -i DeveloperID.p12 \| pbcopy` の結果 |
+| `DEVELOPER_ID_P12_PASSWORD` | `.p12` 書き出し時のパスワード |
 
 ### 注意
 

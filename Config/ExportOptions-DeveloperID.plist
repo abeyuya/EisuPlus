@@ -7,7 +7,10 @@
 	<string>developer-id</string>
 	<key>teamID</key>
 	<string>37XL3EDJ44</string>
+	<!-- Xcode Cloud ではクラウド署名が使えないので、ci_post_xcodebuild.sh が keychain に入れた証明書で手動署名する -->
 	<key>signingStyle</key>
-	<string>automatic</string>
+	<string>manual</string>
+	<key>signingCertificate</key>
+	<string>Developer ID Application</string>
 </dict>
 </plist>
