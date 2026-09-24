@@ -4,11 +4,13 @@
 
 | | `EisuMod`（自分用） | `EisuMod-AppStore` |
 |---|---|---|
-| 署名 | Developer ID Application（手動） | Apple Distribution（自動署名） |
+| 署名 | 自動署名（Xcode Cloud で Developer ID 署名・公証。ローカルは `scripts/install.sh` で Developer ID に上書き） | Apple Distribution（自動署名） |
 | App Sandbox | なし | あり（`Config/EisuMod-AppStore.entitlements`） |
 | コンパイル条件 | なし | `APP_STORE` |
 | 隣のデスクトップへ運ぶ | あり | **なし**（非公開 API の SkyLight と `_AXUIElementGetWindow` を使うため） |
-| インストール | `scripts/install.sh` | `scripts/archive-appstore.sh` |
+| 配布 | GitHub Release（[RELEASE.md](RELEASE.md)） | `scripts/archive-appstore.sh` |
+
+Xcode Cloud の `ci_post_xcodebuild.sh`（公証と GitHub Release）は `EisuMod` スキームのときだけ動く。
 
 非公開 API を使う機能を追加するときは `#if !APP_STORE` で囲むこと（App Review のガイドライン 2.5.1 で却下される）。
 

@@ -33,9 +33,10 @@ targets:
         NSHumanReadableCopyright: © 2026 Yuya Abe
     settings:
       base:
-        CODE_SIGN_STYLE: Manual
-        CODE_SIGN_IDENTITY: "Developer ID Application"
-        ENABLE_HARDENED_RUNTIME: NO
+        # Xcode Cloud のクラウド署名は自動署名が前提。ローカルの scripts/install.sh では Developer ID に上書きする
+        CODE_SIGN_STYLE: Automatic
+        # 公証 (notarization) に必須
+        ENABLE_HARDENED_RUNTIME: YES
         ENABLE_APP_SANDBOX: NO
 
   # Mac App Store 用。サンドボックスを有効にし、非公開 API を使う機能を APP_STORE フラグで外す
@@ -49,8 +50,21 @@ targets:
         INFOPLIST_FILE: EisuMod/Info.plist
         CODE_SIGN_ENTITLEMENTS: Config/EisuMod-AppStore.entitlements
         CODE_SIGN_STYLE: Automatic
-        CODE_SIGN_IDENTITY: "Apple Development"
         ENABLE_APP_SANDBOX: YES
         ENABLE_HARDENED_RUNTIME: YES
         ENABLE_USER_SELECTED_FILES: readonly
         SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) APP_STORE
+schemes:
+  # Xcode Cloud は共有スキームが必要
+  EisuMod:
+    build:
+      targets:
+        EisuMod: all
+    archive:
+      config: Release
+  EisuMod-AppStore:
+    build:
+      targets:
+        EisuMod-AppStore: all
+    archive:
+      config: Release

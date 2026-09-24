@@ -8,7 +8,8 @@ final class InputSourceSwitcher: EventHandler, @unchecked Sendable {
     private static let longPressThreshold: UInt64 = 500_000_000 // ns
 
     private let settings: SettingsSnapshot
-    /// 単押し候補の ⌘ の keyCode と押下時刻（CGEvent.timestamp）
+    /// 単押し候補の ⌘ の keyCode と押下時刻（ナノ秒）。
+    /// CGEvent.timestamp は Apple Silicon で mach の tick 単位になることがあるため、処理した時点の時刻で計る
     private var pending: (keyCode: Int64, timestamp: UInt64)?
 
     init(settings: SettingsSnapshot) {
@@ -28,10 +29,10 @@ final class InputSourceSwitcher: EventHandler, @unchecked Sendable {
         let flags = event.flags.gestureModifiers
 
         if isCommandKey, flags == .maskCommand {
-            pending = (keyCode, event.timestamp)
+            pending = (keyCode, DispatchTime.now().uptimeNanoseconds)
         } else if isCommandKey, flags.isEmpty, let pending, pending.keyCode == keyCode {
             self.pending = nil
-            let elapsed = event.timestamp &- pending.timestamp
+            let elapsed = DispatchTime.now().uptimeNanoseconds &- pending.timestamp
             let current = settings.current
             guard elapsed < Self.longPressThreshold, current.inputSourceSwitchEnabled, !current.isPaused else { return false }
             let isLeft = keyCode == Int64(kVK_Command)

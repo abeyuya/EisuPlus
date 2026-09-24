@@ -157,6 +157,9 @@ final class WindowOperator: @unchecked Sendable {
             MainActor.assumeIsolated { preview.hide() }
         }
         let carried = SpaceCarrier.carry(target.window, screen: screen, direction: direction, restoreCursor: cursor)
+        // 運んでいる間に届いた位置（カーソルはつかんだ位置に固定されていた）は捨てる。
+        // 残すと、戻した startMouse との差でウィンドウが大きくずれる
+        pending.withLock { $0.point = nil }
 
         // 運べたら、端に押し付けたままなら次の移動でさらに隣へ運ぶ予約が入るようにする。
         // 失敗したら端から離れるまで再試行しない（合成クリックを繰り返さないため）
