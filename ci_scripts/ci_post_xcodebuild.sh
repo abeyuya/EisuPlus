@@ -16,8 +16,9 @@ if [[ "${CI_XCODEBUILD_EXIT_CODE:-1}" != "0" ]]; then
   echo "xcodebuild が失敗しているのでスキップ"
   exit 0
 fi
-if [[ -z "${CI_TAG:-}" ]]; then
-  echo "タグ起動ではないのでスキップ"
+# App Store 用のスキーム (EisuMod-AppStore) は Xcode Cloud が App Store Connect へアップロードするので、ここでは扱わない
+if [[ "${CI_XCODE_SCHEME:-}" != "EisuMod" ]]; then
+  echo "EisuMod スキームではないのでスキップ"
   exit 0
 fi
 
@@ -56,7 +57,23 @@ if [[ "$status" != "Accepted" ]]; then
 fi
 xcrun stapler staple "$app_path"
 
-asset_name="EisuMod-${CI_TAG#v}.zip"
+# タグ起動なら正式リリース、それ以外 (ブランチ / PR 起動) はビルド番号付きの prerelease にする
+# prerelease のタグは `v` で始めない (Tag Changes の起動条件に引っかかって再ビルドされるのを防ぐ)
+if [[ -n "${CI_TAG:-}" ]]; then
+  release_tag="$CI_TAG"
+  release_name="$CI_TAG"
+  prerelease=false
+  asset_name="EisuMod-${CI_TAG#v}.zip"
+else
+  version="$(defaults read "$app_path/Contents/Info.plist" CFBundleShortVersionString)"
+  build_number="${CI_BUILD_NUMBER:?CI_BUILD_NUMBER がない}"
+  source_ref="${CI_BRANCH:-${CI_PULL_REQUEST_SOURCE_BRANCH:-unknown}}"
+  source_ref="${source_ref//[\"\\]/}"  # JSON に埋め込むので " と \ を除く
+  release_tag="build-$build_number"
+  release_name="$version build $build_number ($source_ref)"
+  prerelease=true
+  asset_name="EisuMod-$version-build$build_number.zip"
+fi
 asset_path="$work_dir/$asset_name"
 ditto -c -k --keepParent "$app_path" "$asset_path"
 
@@ -68,7 +85,7 @@ api_headers=(
 )
 # Rebuild 時などに備え、同じタグの Release があれば再利用し、同名の asset は置き換える
 if release="$(curl -sS --fail "${api_headers[@]}" \
-  "https://api.github.com/repos/$GITHUB_REPO/releases/tags/$CI_TAG")"; then
+  "https://api.github.com/repos/$GITHUB_REPO/releases/tags/$release_tag")"; then
   release_id="$(echo "$release" | plutil -extract id raw -)"
   asset_count="$(echo "$release" | plutil -extract assets raw -)"
   for (( i = 0; i < asset_count; i++ )); do
@@ -79,9 +96,10 @@ if release="$(curl -sS --fail "${api_headers[@]}" \
     fi
   done
 else
+  # タグが未作成 (prerelease) の場合は target_commitish のコミットにタグが作られる
+  body="{\"tag_name\":\"$release_tag\",\"name\":\"$release_name\",\"target_commitish\":\"${CI_COMMIT:?CI_COMMIT がない}\",\"prerelease\":$prerelease,\"generate_release_notes\":true}"
   release="$(curl -sS --fail-with-body "${api_headers[@]}" \
-    -X POST "https://api.github.com/repos/$GITHUB_REPO/releases" \
-    -d "{\"tag_name\":\"$CI_TAG\",\"name\":\"$CI_TAG\",\"generate_release_notes\":true}")"
+    -X POST "https://api.github.com/repos/$GITHUB_REPO/releases" -d "$body")"
   release_id="$(echo "$release" | plutil -extract id raw -)"
 fi
 
@@ -90,4 +108,4 @@ curl -sS --fail-with-body "${api_headers[@]}" \
   -X POST "https://uploads.github.com/repos/$GITHUB_REPO/releases/$release_id/assets?name=$asset_name" \
   --data-binary "@$asset_path" > /dev/null
 
-echo "uploaded: $asset_name -> release $CI_TAG"
+echo "uploaded: $asset_name -> release $release_tag"

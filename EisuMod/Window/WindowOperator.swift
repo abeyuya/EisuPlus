@@ -7,8 +7,10 @@ import os
 /// 位置の更新は最新のものだけを反映する（古いものは捨てる）。
 final class WindowOperator: @unchecked Sendable {
     private static let minimumSize = CGSize(width: 120, height: 80)
+    #if !APP_STORE
     /// 左右の端に押し付けたまま、隣のデスクトップへ運ぶまで待つ時間
     private static let spaceCarryDelay: TimeInterval = 0.7
+    #endif
 
     private let queue = DispatchQueue(label: "com.github.abeyuya.EisuMod.window-operator", qos: .userInteractive)
 
@@ -27,9 +29,11 @@ final class WindowOperator: @unchecked Sendable {
         var target: Target?
         /// 移動中にカーソルが入っているスナップ領域
         var snapZone: (zone: SnapZone, frame: CGRect)?
+        #if !APP_STORE
         /// 押し付けている端の方向と、隣のデスクトップへ運ぶ予約
         var carryDirection: SpaceDirection?
         var carryWork: DispatchWorkItem?
+        #endif
     }
 
     init(settings: SettingsSnapshot, geometry: ScreenGeometry, preview: SnapPreviewWindow) {
@@ -90,7 +94,9 @@ final class WindowOperator: @unchecked Sendable {
         case .move:
             target.window.setPosition(CGPoint(x: target.startFrame.minX + dx, y: target.startFrame.minY + dy))
             updateSnapZone(at: point)
+            #if !APP_STORE
             updateSpaceCarry(at: point)
+            #endif
         case .resize:
             resize(target, dx: dx, dy: dy)
         }
@@ -117,6 +123,7 @@ final class WindowOperator: @unchecked Sendable {
         }
     }
 
+    #if !APP_STORE
     /// 左右の端に押し付けたらタイマーを仕掛け、留まり続けたら隣のデスクトップへ運ぶ
     private func updateSpaceCarry(at point: CGPoint) {
         var direction: SpaceDirection?
@@ -164,6 +171,7 @@ final class WindowOperator: @unchecked Sendable {
             self.session?.target?.startMouse = cursor
         }
     }
+    #endif
 
     /// スナップしたままのウィンドウを動かし始めたら、スナップ前のサイズに戻す。
     /// カーソルがウィンドウ内の同じ相対位置に来るよう位置も合わせる
@@ -205,7 +213,9 @@ final class WindowOperator: @unchecked Sendable {
     }
 
     private func finishSession() {
+        #if !APP_STORE
         session?.carryWork?.cancel()
+        #endif
         if let session, let target = session.target {
             if let zone = session.snapZone {
                 snap.apply(zone.frame, to: target.window, originalSize: target.startFrame.size)
