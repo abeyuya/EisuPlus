@@ -22,8 +22,22 @@ if [[ "${CI_XCODE_SCHEME:-}" != "EisuMod" ]]; then
   exit 0
 fi
 
-# CI_DEVELOPER_ID_SIGNED_APP_PATH は .app そのもの、または .app を含むディレクトリ
-signed_path="${CI_DEVELOPER_ID_SIGNED_APP_PATH:?Developer ID 署名済みアプリがない}"
+work_dir="$(mktemp -d)"
+key_path="$work_dir/AuthKey.p8"
+echo "$ASC_KEY_P8_BASE64" | base64 --decode > "$key_path"
+
+# Xcode Cloud は Deployment Preparation の設定によって Developer ID 版を書き出さない (app-store と development だけになる)。
+# その場合は archive から API キーのクラウド署名で Developer ID 版を書き出す
+signed_path="${CI_DEVELOPER_ID_SIGNED_APP_PATH:-}"
+if [[ -z "$signed_path" ]]; then
+  echo "CI_DEVELOPER_ID_SIGNED_APP_PATH がないので archive から Developer ID で書き出す"
+  signed_path="$work_dir/developer-id"
+  xcodebuild -exportArchive -archivePath "${CI_ARCHIVE_PATH:?CI_ARCHIVE_PATH がない}" \
+    -exportOptionsPlist "$CI_PRIMARY_REPOSITORY_PATH/Config/ExportOptions-DeveloperID.plist" \
+    -exportPath "$signed_path" -allowProvisioningUpdates \
+    -authenticationKeyPath "$key_path" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+fi
+# signed_path は .app そのもの、または .app を含むディレクトリ
 if [[ "$signed_path" == *.app ]]; then
   app_path="$signed_path"
 else
@@ -34,10 +48,6 @@ if [[ -z "$app_path" || ! -d "$app_path" ]]; then
   exit 1
 fi
 echo "app: $app_path"
-
-work_dir="$(mktemp -d)"
-key_path="$work_dir/AuthKey.p8"
-echo "$ASC_KEY_P8_BASE64" | base64 --decode > "$key_path"
 
 # 公証
 ditto -c -k --keepParent "$app_path" "$work_dir/notarize.zip"

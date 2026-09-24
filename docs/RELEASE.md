@@ -41,7 +41,8 @@ private リポジトリなので `gh auth login` 済みであること。
 
 ### 1. API キー / トークンの用意
 
-- App Store Connect → ユーザとアクセス → 統合 → App Store Connect API でキーを発行 (アクセス: Developer)
+- App Store Connect → ユーザとアクセス → 統合 → App Store Connect API でキーを発行 (アクセス: **Admin**)
+  - Xcode Cloud が Developer ID 版を書き出さないとき、`ci_post_xcodebuild.sh` はこのキーのクラウド署名で archive から Developer ID 版を書き出す。Developer ID のクラウド署名は Admin 以上でないとできない
   - Key ID / Issuer ID / `.p8` ファイルを控える
 - GitHub で fine-grained PAT を発行
   - Repository access: `abeyuya/EisuMod` のみ
