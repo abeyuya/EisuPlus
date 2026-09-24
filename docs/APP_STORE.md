@@ -8,9 +8,9 @@
 | App Sandbox | なし | あり（`Config/EisuMod-AppStore.entitlements`） |
 | コンパイル条件 | なし | `APP_STORE` |
 | 隣のデスクトップへ運ぶ | あり | **なし**（非公開 API の SkyLight と `_AXUIElementGetWindow` を使うため） |
-| 配布 | GitHub Release（[RELEASE.md](RELEASE.md)） | `scripts/archive-appstore.sh` |
+| 配布 | GitHub Release（Xcode Cloud） | App Store Connect（Xcode Cloud。手元からは `scripts/archive-appstore.sh`） |
 
-Xcode Cloud の `ci_post_xcodebuild.sh`（公証と GitHub Release）は `EisuMod` スキームのときだけ動く。
+どちらも同じ Xcode Cloud のワークフローでビルドする（[RELEASE.md](RELEASE.md)）。`ci_post_xcodebuild.sh`（公証と GitHub Release）は `EisuMod` スキームのときだけ動く。
 
 非公開 API を使う機能を追加するときは `#if !APP_STORE` で囲むこと（App Review のガイドライン 2.5.1 で却下される）。
 
@@ -51,18 +51,27 @@ xcodegen generate -q && xcodebuild -project EisuMod.xcodeproj -scheme EisuMod-Ap
    - App のプライバシー: 「データを収集していません」
    - 価格と配信地域
 
-### 2. リリースのたび
+### 2. Xcode Cloud のワークフローに App Store 版を足す（初回だけ）
 
-1. `project.yml` の `MARKETING_VERSION`（表示用）と `CURRENT_PROJECT_VERSION`（ビルド番号。アップロードのたびに増やす）を上げる
-2. アーカイブしてアップロードする
+Developer ID 版をビルドしている既存のワークフローを編集する（Xcode の Integrate > Manage Workflows…、または App Store Connect の Xcode Cloud タブ）。
 
-   ```bash
-   ./scripts/archive-appstore.sh --upload
-   ```
+1. Actions の「+」から **Archive** を追加する
+   - Platform: macOS
+   - Scheme: `EisuMod-AppStore`
+   - Deployment Preparation: **TestFlight and App Store**
+2. 必要なら Post-Actions に **TestFlight Internal Testing** を追加し、自分をテスターにする
 
-   `--upload` なしなら `build-mas/export/` に `.pkg` を書き出すだけ（Transporter でアップロードしてもよい）。
-   初回は Apple Distribution 証明書と Mac App Store 用のプロビジョニングプロファイルが自動で作られる。
-3. App Store Connect でビルドを選び、審査へ提出する
+これで `release/production` が伸びるたびに、Developer ID 版（GitHub Release）と App Store 版（App Store Connect）の両方がビルドされる。
+署名（Apple Distribution 証明書とプロビジョニングプロファイル）は Xcode Cloud のクラウド署名が行う。
+
+### 3. リリースのたび
+
+1. `project.yml` の `MARKETING_VERSION` を上げてから `release/production` へマージする
+   - ビルド番号（`CURRENT_PROJECT_VERSION`）は `ci_post_clone.sh` が `CI_BUILD_NUMBER` で上書きするので触らなくてよい
+   - ブランチ起動のビルドではタグからバージョンが決まらない。審査を通ったバージョンのままアップロードすると App Store Connect に拒否され、App Store 版の Archive アクションが失敗する
+2. App Store Connect の TestFlight にビルドが届いたら、新しいバージョンを作ってビルドを選び、審査へ提出する
+
+手元からアップロードする場合は `./scripts/archive-appstore.sh --upload`（`CURRENT_PROJECT_VERSION` を Xcode Cloud のビルド番号より大きくしておくこと）。`--upload` なしなら `build-mas/export/` に `.pkg` を書き出すだけ。
 
 ## 審査対策
 
