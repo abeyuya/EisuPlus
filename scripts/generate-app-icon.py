@@ -85,6 +85,9 @@ def main(out_dir):
         "eisu.svg": svg(f'<g fill="{COLOR_A}">{glyph_path(font, "A", A_CENTER, A_HEIGHT)}</g>'),
         "kana.svg": svg(f'<g fill="{COLOR_KANA}">{glyph_path(font, "あ", KANA_CENTER, KANA_HEIGHT)}</g>'),
     }
+    # レイヤーを改名・削除したときに古い SVG が残らないようにする
+    for stale in assets.glob("*.svg"):
+        stale.unlink()
     for name, content in layers.items():
         (assets / name).write_text(content)
 
@@ -117,4 +120,6 @@ def main(out_dir):
 
 
 if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        sys.exit(f"usage: {sys.argv[0]} <output .icon directory>")
     main(sys.argv[1])
