@@ -9,7 +9,7 @@ export P1="$(uuidgen)" P2="$(uuidgen)"
 security find-certificate -c "$name" -p "$keychain" > "$d/cert.pem"
 security export -k "$keychain" -t identities -f pkcs12 -P "$P1" -o "$d/all.p12"
 openssl pkcs12 -legacy -in "$d/all.p12" -passin env:P1 -nocerts -nodes 2>/dev/null \
-  | awk -v d="$d" '/BEGIN PRIVATE KEY/{n++; f=d"/key" n ".pem"} f{print > f} /END PRIVATE KEY/{f=""}'
+  | LC_ALL=C awk -v d="$d" '/BEGIN PRIVATE KEY/{n++; f=d"/key" n ".pem"} f{print > f} /END PRIVATE KEY/{f=""}'
 want="$(openssl x509 -in "$d/cert.pem" -noout -pubkey)"
 key=""
 for k in "$d"/key*.pem; do
