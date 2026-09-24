@@ -16,6 +16,11 @@ if [[ "${CI_XCODEBUILD_EXIT_CODE:-1}" != "0" ]]; then
   echo "xcodebuild が失敗しているのでスキップ"
   exit 0
 fi
+# App Store 用のスキーム (EisuMod-AppStore) は Xcode Cloud が App Store Connect へアップロードするので、ここでは扱わない
+if [[ "${CI_XCODE_SCHEME:-}" != "EisuMod" ]]; then
+  echo "EisuMod スキームではないのでスキップ"
+  exit 0
+fi
 
 # CI_DEVELOPER_ID_SIGNED_APP_PATH は .app そのもの、または .app を含むディレクトリ
 signed_path="${CI_DEVELOPER_ID_SIGNED_APP_PATH:?Developer ID 署名済みアプリがない}"

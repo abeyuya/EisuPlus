@@ -1,8 +1,10 @@
 @preconcurrency import ApplicationServices
 import AppKit
 
+#if !APP_STORE
 @_silgen_name("_AXUIElementGetWindow")
 private func _AXUIElementGetWindow(_ element: AXUIElement, _ id: UnsafeMutablePointer<CGWindowID>) -> AXError
+#endif
 
 /// AX まわりのヘルパー。座標は AX / CGEvent と同じ左上原点のグローバル座標。
 enum WindowLocator {
@@ -98,11 +100,13 @@ enum WindowLocator {
         return AXUIElementSetAttributeValue(app, enhancedUserInterfaceAttribute as CFString, value) == .success
     }
 
+    #if !APP_STORE
     /// AX 要素に対応するウィンドウ番号（非公開 API の _AXUIElementGetWindow）
     static func windowNumber(of window: AXUIElement) -> Int? {
         var id: CGWindowID = 0
         return _AXUIElementGetWindow(window, &id) == .success ? Int(id) : nil
     }
+    #endif
 
     static func appName(of element: AXUIElement) -> String {
         var pid: pid_t = 0
