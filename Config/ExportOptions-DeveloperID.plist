@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- ci_post_xcodebuild.sh で Xcode Cloud が Developer ID 版を書き出さなかったときに使う -->
+	<key>method</key>
+	<string>developer-id</string>
+	<key>teamID</key>
+	<string>37XL3EDJ44</string>
+	<!-- Xcode Cloud ではクラウド署名が使えないので、ci_post_xcodebuild.sh が keychain に入れた証明書で手動署名する -->
+	<key>signingStyle</key>
+	<string>manual</string>
+	<key>signingCertificate</key>
+	<string>Developer ID Application</string>
+</dict>
+</plist>

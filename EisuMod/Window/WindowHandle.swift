@@ -81,7 +81,7 @@ enum WindowHandle {
     var appName: String {
         switch self {
         case .accessibility(let window): WindowLocator.appName(of: window)
-        case .own: "EisuMod"
+        case .own: "EisuPlus"
         }
     }
 }

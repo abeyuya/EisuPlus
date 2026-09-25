@@ -7,7 +7,7 @@ cd "$(dirname "$0")/.."
 destination=export
 [[ "${1:-}" == "--upload" ]] && destination=upload
 
-archive=build-mas/EisuMod.xcarchive
+archive=build-mas/EisuPlus.xcarchive
 options=build-mas/ExportOptions.plist
 
 xcodegen generate -q

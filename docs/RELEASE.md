@@ -8,9 +8,9 @@ git push origin v0.2.0
 ```
 
 - `ci_scripts/ci_post_clone.sh`: xcodegen で xcodeproj を生成。タグからバージョン (`MARKETING_VERSION`)、`CI_BUILD_NUMBER` からビルド番号を設定
-- `ci_scripts/ci_post_xcodebuild.sh`: Developer ID 署名済みアプリを notarytool で公証・staple し、`EisuMod-<version>.zip` を GitHub Release にアップロード
+- `ci_scripts/ci_post_xcodebuild.sh`: Developer ID 署名済みアプリを notarytool で公証・staple し、`EisuPlus-<version>.zip` を GitHub Release にアップロード
 
-タグ以外 (ブランチ / PR) で起動された Archive も、`build-<ビルド番号>` タグの **prerelease** として `EisuMod-<version>-build<ビルド番号>.zip` をアップロードする。prerelease は `install-latest.sh` の「最新リリース」には含まれない。
+タグ以外 (ブランチ / PR) で起動された Archive も、`build-<ビルド番号>` タグの **prerelease** として `EisuPlus-<version>-build<ビルド番号>.zip` をアップロードする。prerelease は `install-latest.sh` の「最新リリース」には含まれない。
 
 ## App Store 向けビルド
 
@@ -46,6 +46,8 @@ private リポジトリなので `gh auth login` 済みであること。
 - GitHub で fine-grained PAT を発行
   - Repository access: `abeyuya/EisuMod` のみ
   - Permissions: Contents → Read and write
+- Developer ID Application 証明書を `.p12` で書き出す: `./scripts/export-developer-id-p12.sh` を実行すると、`DEVELOPER_ID_P12_BASE64` と `DEVELOPER_ID_P12_PASSWORD` の値が順にクリップボードに入る (ファイルは残らない)
+  - Xcode Cloud は Developer ID 版を書き出さず (Distribution Preparation に Developer ID がない)、API キーでは Developer ID のクラウド署名もできない。そのため `ci_post_xcodebuild.sh` がこの証明書で archive から Developer ID 版を書き出す
 
 ### 2. ワークフローの作成
 
@@ -63,6 +65,8 @@ private リポジトリなので `gh auth login` 済みであること。
 | `ASC_ISSUER_ID` | Issuer ID |
 | `ASC_KEY_P8_BASE64` | `base64 -i AuthKey_XXXX.p8 \| pbcopy` の結果 |
 | `GITHUB_RELEASE_TOKEN` | fine-grained PAT |
+| `DEVELOPER_ID_P12_BASE64` | `scripts/export-developer-id-p12.sh` が 1 つ目にクリップボードへ入れる値 |
+| `DEVELOPER_ID_P12_PASSWORD` | 同じく 2 つ目にクリップボードへ入れる値 |
 
 ### 注意
 

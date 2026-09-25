@@ -2,6 +2,8 @@
 
 自分用ビルド（`EisuMod` ターゲット）とは別に、Mac App Store 用の `EisuMod-AppStore` ターゲットを用意している。ソースは共通。
 
+アプリ名（表示名と `.app` の名前）は **EisuPlus**。ターゲット・スキーム・バンドル ID（`com.github.abeyuya.EisuMod`）・リポジトリ名は旧名の EisuMod のまま。
+
 | | `EisuMod`（自分用） | `EisuMod-AppStore` |
 |---|---|---|
 | 署名 | 自動署名（Xcode Cloud で Developer ID 署名・公証。ローカルは `scripts/install.sh` で Developer ID に上書き） | Apple Distribution（自動署名） |
@@ -41,6 +43,7 @@ xcodegen generate -q && xcodebuild -project EisuMod.xcodeproj -scheme EisuMod-Ap
 1. Xcode の Settings > Accounts に個人の Apple ID（Team `37XL3EDJ44`）を追加する
 2. [Certificates, Identifiers & Profiles](https://developer.apple.com/account/resources/identifiers/list) で App ID `com.github.abeyuya.EisuMod` を登録する（`-allowProvisioningUpdates` で自動登録されることもある）
 3. [App Store Connect](https://appstoreconnect.apple.com/) で新規 macOS アプリを作る
+   - 名前: `EisuPlus`
    - バンドル ID: `com.github.abeyuya.EisuMod`
    - SKU: 任意（例: `eisumod`）
    - カテゴリ: ユーティリティ（`LSApplicationCategoryType` と合わせる）
@@ -78,7 +81,7 @@ Developer ID 版をビルドしている既存のワークフローを編集す�
 アクセシビリティ権限を要求するアプリは、用途を審査メモ（App Review Information > Notes）で説明しないと却下されやすい。以下を英語で書いておく。
 
 ```text
-EisuMod is a menu bar utility for keyboard and window management.
+EisuPlus is a menu bar utility for keyboard and window management.
 
 Why it needs the Accessibility permission:
 - To detect a single press of the left/right Command key and switch the input source to
