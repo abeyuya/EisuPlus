@@ -85,7 +85,7 @@ if [[ -n "${CI_TAG:-}" ]]; then
   release_tag="$CI_TAG"
   release_name="$CI_TAG"
   prerelease=false
-  asset_name="EisuMod-${CI_TAG#v}.zip"
+  asset_name="EisuPlus-${CI_TAG#v}.zip"
 else
   version="$(defaults read "$app_path/Contents/Info.plist" CFBundleShortVersionString)"
   build_number="${CI_BUILD_NUMBER:?CI_BUILD_NUMBER がない}"
@@ -94,7 +94,7 @@ else
   release_tag="build-$build_number"
   release_name="$version build $build_number ($source_ref)"
   prerelease=true
-  asset_name="EisuMod-$version-build$build_number.zip"
+  asset_name="EisuPlus-$version-build$build_number.zip"
 fi
 asset_path="$work_dir/$asset_name"
 ditto -c -k --keepParent "$app_path" "$asset_path"

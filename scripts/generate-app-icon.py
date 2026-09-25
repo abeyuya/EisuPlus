@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""EisuMod のアプリアイコン（Icon Composer 形式）を生成する。
+"""EisuPlus のアプリアイコン（Icon Composer 形式）を生成する。
 
 キーキャップを対角線で分割し、左上に「A」、右下に「あ」を置いたデザイン。
 文字はフォントからアウトラインを取り出して SVG のパスにする（Icon Composer は SVG の <text> を描けないため）。

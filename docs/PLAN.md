@@ -127,7 +127,7 @@ App (MenuBarExtra / Settings Window)
 ./scripts/install.sh
 ```
 
-Release ビルドを `/Applications/EisuMod.app` に配置して起動し直す。署名が同じなのでアクセシビリティ権限は引き継がれる。
+Release ビルドを `/Applications/EisuPlus.app` に配置して起動し直す。署名が同じなのでアクセシビリティ権限は引き継がれる。
 ログイン時の起動は、設定画面の「ログイン時に起動」から `/Applications` 版で有効にする。
 
 ## 既知の落とし穴

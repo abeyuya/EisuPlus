@@ -1,5 +1,5 @@
 #!/bin/zsh
-# Release ビルドして /Applications/EisuMod.app に配置し、起動し直す
+# Release ビルドして /Applications/EisuPlus.app に配置し、起動し直す
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -9,9 +9,12 @@ xcodebuild -project EisuMod.xcodeproj -scheme EisuMod -configuration Release -de
   CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="Developer ID Application" \
   build
 
-osascript -e 'quit app "EisuMod"' 2>/dev/null || true
+# 旧名 (EisuMod.app) で動いているものも止めるため、バンドル ID で終了させる
+osascript -e 'quit app id "com.github.abeyuya.EisuMod"' 2>/dev/null || true
 sleep 1
-rsync -a --delete build/Build/Products/Release/EisuMod.app/ /Applications/EisuMod.app/
-open /Applications/EisuMod.app
+# 旧名の .app が残っているとバンドル ID が重複するので消す
+rm -rf /Applications/EisuMod.app
+rsync -a --delete build/Build/Products/Release/EisuPlus.app/ /Applications/EisuPlus.app/
+open /Applications/EisuPlus.app
 
-echo "installed: /Applications/EisuMod.app"
+echo "installed: /Applications/EisuPlus.app"

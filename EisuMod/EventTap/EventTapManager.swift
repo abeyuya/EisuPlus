@@ -74,7 +74,7 @@ final class EventTapManager: @unchecked Sendable {
             return Unmanaged.passUnretained(event)
         }
         #if !APP_STORE
-        // EisuMod 自身が合成したイベント（隣のデスクトップへ運ぶ操作など）は判定に使わない
+        // EisuPlus 自身が合成したイベント（隣のデスクトップへ運ぶ操作など）は判定に使わない
         if event.getIntegerValueField(.eventSourceUserData) == SpaceCarrier.syntheticEventMarker {
             return Unmanaged.passUnretained(event)
         }
