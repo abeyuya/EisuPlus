@@ -5,11 +5,11 @@ struct EisuModApp: App {
     @State private var model = AppModel()
 
     var body: some Scene {
-        MenuBarExtra("EisuMod", systemImage: model.settingsStore.settings.isPaused ? "keyboard.badge.ellipsis" : "keyboard") {
+        MenuBarExtra("EisuPlus", systemImage: model.settingsStore.settings.isPaused ? "keyboard.badge.ellipsis" : "keyboard") {
             MenuContent(model: model, settings: Bindable(model.settingsStore).settings)
         }
 
-        Window("EisuMod 設定", id: SettingsView.windowID) {
+        Window("EisuPlus 設定", id: SettingsView.windowID) {
             SettingsView(settings: Bindable(model.settingsStore).settings)
         }
         .windowResizability(.contentSize)

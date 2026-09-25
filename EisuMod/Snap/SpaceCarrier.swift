@@ -18,7 +18,7 @@ enum SpaceDirection: Sendable {
 /// 「ウィンドウをつかんだまま操作スペースを切り替えると一緒に移る」挙動を再現する。
 /// 最小化ボタンの真上（確実にドラッグできるタイトルバー部分）を合成イベントでつかみ、⌃← / ⌃→ を送ってから離す。
 enum SpaceCarrier {
-    /// EisuMod が合成したイベントの目印（EventTapManager で素通しする）
+    /// EisuPlus が合成したイベントの目印（EventTapManager で素通しする）
     static let syntheticEventMarker: Int64 = 0x4549_5355 // "EISU"
 
     /// 最小化ボタンが取れないウィンドウでつかむ位置（ウィンドウ左上からの距離）
