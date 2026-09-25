@@ -11,8 +11,10 @@ trap 'rm -rf "$work_dir"' EXIT
 
 # 古いリリースの asset は EisuMod-*.zip、新しいものは EisuPlus-*.zip
 gh release download ${tag:+"$tag"} --repo "$repo" --pattern 'Eisu*.zip' --dir "$work_dir"
-ditto -x -k "$work_dir"/Eisu*.zip "$work_dir"
-app_path=("$work_dir"/Eisu*.app)
+# 改名前に作ったリリースを改名後に再ビルドすると両方の asset が残るので、新しい名前を優先する
+zips=("$work_dir"/EisuPlus-*.zip(N) "$work_dir"/EisuMod-*.zip(N))
+ditto -x -k "${zips[1]}" "$work_dir/app"
+app_path=("$work_dir"/app/*.app)
 
 # 旧名 (EisuMod.app) で動いているものも止めるため、バンドル ID で終了させる
 osascript -e 'quit app id "com.github.abeyuya.EisuMod"' 2>/dev/null || true

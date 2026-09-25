@@ -129,6 +129,7 @@ App (MenuBarExtra / Settings Window)
 
 Release ビルドを `/Applications/EisuPlus.app` に配置して起動し直す。署名が同じなのでアクセシビリティ権限は引き継がれる。
 ログイン時の起動は、設定画面の「ログイン時に起動」から `/Applications` 版で有効にする。
+旧名の `/Applications/EisuMod.app` からの入れ替え後にログイン時に起動しなくなったら、「ログイン時に起動」を一度オフにしてからオンにし直す（ログイン項目が消えた旧パスを指したままになるため）。
 
 ## 既知の落とし穴
 
