@@ -15,6 +15,7 @@
         --platform macOS --rendition Default --width 1024 --height 1024 --scale 1
 """
 import json
+import shutil
 import sys
 from pathlib import Path
 
@@ -129,6 +130,9 @@ def write_menu_bar_icons(font, xcassets_dir):
         # 一時停止中は薄く描いて、無効になっていることを示す
         "MenuBarIconPaused": menu_bar_svg(font, opacity=MENU_PAUSED_OPACITY),
     }
+    # バリアントを改名・削除したときに古い imageset が残らないようにする
+    for stale in Path(xcassets_dir).glob("MenuBarIcon*.imageset"):
+        shutil.rmtree(stale)
     for name, content in variants.items():
         imageset = Path(xcassets_dir) / f"{name}.imageset"
         imageset.mkdir(parents=True, exist_ok=True)
@@ -141,7 +145,8 @@ def write_menu_bar_icons(font, xcassets_dir):
                 "template-rendering-intent": "template",
             },
         }
-        (imageset / "Contents.json").write_text(json.dumps(contents, indent=2) + "\n")
+        # Xcode と同じ書式にして、Xcode で開いたときに差分が出ないようにする
+        (imageset / "Contents.json").write_text(json.dumps(contents, indent=2, separators=(",", " : ")) + "\n")
 
 
 def main(out_dir, xcassets_dir):
