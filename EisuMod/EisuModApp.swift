@@ -5,7 +5,7 @@ struct EisuModApp: App {
     @State private var model = AppModel()
 
     var body: some Scene {
-        MenuBarExtra("EisuPlus", systemImage: model.settingsStore.settings.isPaused ? "keyboard.badge.ellipsis" : "keyboard") {
+        MenuBarExtra("EisuPlus", image: model.settingsStore.settings.isPaused ? "MenuBarIconPaused" : "MenuBarIcon") {
             MenuContent(model: model, settings: Bindable(model.settingsStore).settings)
         }
 
