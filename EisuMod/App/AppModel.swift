@@ -14,6 +14,9 @@ final class AppModel {
 
     private(set) var status: Status = .waitingForPermission
     let settingsStore = SettingsStore()
+    #if !APP_STORE
+    let updater = Updater()
+    #endif
 
     @ObservationIgnored private let tapManager: EventTapManager
     @ObservationIgnored private var permissionTimer: Timer?

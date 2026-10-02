@@ -14,6 +14,9 @@ struct SettingsView: View {
                 if let error = loginItem.errorMessage {
                     Text(error).font(.caption).foregroundStyle(.red)
                 }
+                #if !APP_STORE
+                AutomaticUpdateToggle()
+                #endif
             }
 
             Section("入力切り替え") {
@@ -59,6 +62,16 @@ struct SettingsView: View {
         .fixedSize(horizontal: false, vertical: true)
     }
 }
+
+#if !APP_STORE
+private struct AutomaticUpdateToggle: View {
+    @Environment(Updater.self) private var updater
+
+    var body: some View {
+        Toggle("アップデートを自動で確認", isOn: Bindable(updater).automaticallyChecksForUpdates)
+    }
+}
+#endif
 
 private struct ExcludedAppsEditor: View {
     @Binding var bundleIDs: Set<String>

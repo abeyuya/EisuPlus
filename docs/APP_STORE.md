@@ -1,16 +1,20 @@
 # Mac App Store での配布
 
-自分用ビルド（`EisuMod` ターゲット）とは別に、Mac App Store 用の `EisuMod-AppStore` ターゲットを用意している。ソースは共通。
+> [!NOTE]
+> 0.1.0 (8) はガイドライン 2.4.5 で却下された（2026-09-29）。アクセシビリティ権限をホットキー（⌘の単押しで英数/かな）に使っていることが理由。
+> 当面は Web 配布（[RELEASE.md](RELEASE.md#web-配布-github-pages--sparkle)）を主にする。再挑戦するなら、英かなの判定を入力監視権限の listen-only タップに、切り替えを `TISSelectInputSource` に置き換え、アクセシビリティ権限はウィンドウ操作だけに使う。
+
+Web 配布用のビルド（`EisuMod` ターゲット）とは別に、Mac App Store 用の `EisuMod-AppStore` ターゲットを用意している。ソースは共通。
 
 アプリ名（表示名と `.app` の名前）は **EisuPlus**。ターゲット・スキーム・バンドル ID（`com.github.abeyuya.EisuMod`）・リポジトリ名は旧名の EisuMod のまま。
 
-| | `EisuMod`（自分用） | `EisuMod-AppStore` |
+| | `EisuMod`（Web 配布） | `EisuMod-AppStore` |
 |---|---|---|
 | 署名 | 自動署名（Xcode Cloud で Developer ID 署名・公証。ローカルは `scripts/install.sh` で Developer ID に上書き） | Apple Distribution（自動署名） |
 | App Sandbox | なし | あり（`Config/EisuMod-AppStore.entitlements`） |
 | コンパイル条件 | なし | `APP_STORE` |
 | 隣のデスクトップへ運ぶ | あり | **なし**（非公開 API の SkyLight と `_AXUIElementGetWindow` を使うため） |
-| 配布 | GitHub Release（Xcode Cloud） | App Store Connect（Xcode Cloud。手元からは `scripts/archive-appstore.sh`） |
+| 配布 | GitHub Release と GitHub Pages（Xcode Cloud。Sparkle で自動アップデート） | App Store Connect（Xcode Cloud。手元からは `scripts/archive-appstore.sh`） |
 
 どちらも同じ Xcode Cloud のワークフローでビルドする（[RELEASE.md](RELEASE.md)）。`ci_post_xcodebuild.sh`（公証と GitHub Release）は `EisuMod` スキームのときだけ動く。
 
@@ -26,11 +30,11 @@ App Sandbox 内でも、アクセシビリティ権限があれば以下はそ�
 - `SMAppService.mainApp` によるログイン時の起動
 - 除外アプリの選択（`NSOpenPanel`。`files.user-selected.read-only` で読める）
 
-設定（UserDefaults）はサンドボックスのコンテナに保存されるので、自分用ビルドの設定は引き継がれない。
+設定（UserDefaults）はサンドボックスのコンテナに保存されるので、Web 配布版の設定は引き継がれない。
 
 ## ローカルでサンドボックス版を試す
 
-Apple Distribution 証明書がなくても、Developer ID で署名すれば試せる。バンドル ID と署名者が同じなので、アクセシビリティ権限は自分用ビルドのものが引き継がれる。
+Apple Distribution 証明書がなくても、Developer ID で署名すれば試せる。バンドル ID と署名者が同じなので、アクセシビリティ権限はWeb 配布版のものが引き継がれる。
 
 ```bash
 xcodegen generate -q && xcodebuild -project EisuMod.xcodeproj -scheme EisuMod-AppStore -configuration Release -derivedDataPath build-mas -quiet build CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="Developer ID Application"

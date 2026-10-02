@@ -13,8 +13,12 @@ settings:
     PRODUCT_BUNDLE_IDENTIFIER: com.github.abeyuya.EisuMod
     ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     GENERATE_INFOPLIST_FILE: NO
+packages:
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: "2.10.0"
 targets:
-  # 自分用（Developer ID 署名・サンドボックスなし）。隣のデスクトップへ運ぶ機能など非公開 API を使う機能を含む
+  # Web 配布用（Developer ID 署名・サンドボックスなし・Sparkle で自動アップデート）。隣のデスクトップへ運ぶ機能など非公開 API を使う機能を含む
   EisuMod:
     type: application
     platform: macOS
@@ -31,6 +35,12 @@ targets:
         LSApplicationCategoryType: public.app-category.utilities
         ITSAppUsesNonExemptEncryption: false
         NSHumanReadableCopyright: © 2026 Yuya Abe
+        # Sparkle による自動アップデート。appcast.xml は GitHub Pages に置く（docs/RELEASE.md）
+        SUFeedURL: https://abeyuya.github.io/EisuMod/appcast.xml
+        SUPublicEDKey: ""
+        SUEnableAutomaticChecks: true
+    dependencies:
+      - package: Sparkle
     settings:
       base:
         # Xcode Cloud のクラウド署名は自動署名が前提。ローカルの scripts/install.sh では Developer ID に上書きする
@@ -45,9 +55,20 @@ targets:
     platform: macOS
     sources:
       - EisuMod
+    # Sparkle の設定を含めないため、Web 配布用とは別の Info.plist にする
+    info:
+      path: Config/AppStore-Info.plist
+      properties:
+        CFBundleDisplayName: EisuPlus
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSUIElement: true
+        LSMinimumSystemVersion: "15.0"
+        LSApplicationCategoryType: public.app-category.utilities
+        ITSAppUsesNonExemptEncryption: false
+        NSHumanReadableCopyright: © 2026 Yuya Abe
     settings:
       base:
-        INFOPLIST_FILE: EisuMod/Info.plist
         CODE_SIGN_ENTITLEMENTS: Config/EisuMod-AppStore.entitlements
         CODE_SIGN_STYLE: Automatic
         ENABLE_APP_SANDBOX: YES
