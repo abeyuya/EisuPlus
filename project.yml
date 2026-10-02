@@ -39,7 +39,7 @@ targets:
           NSHumanReadableCopyright: © 2026 Yuya Abe
         # Sparkle による自動アップデート。appcast.xml は GitHub Pages に置く（docs/RELEASE.md）
         SUFeedURL: https://abeyuya.github.io/EisuMod/appcast.xml
-        SUPublicEDKey: ""
+        SUPublicEDKey: j2d/9tqvxqK80oVnmgBMRAN555duYgxg1ZD0Nn8Ew4M=
         SUEnableAutomaticChecks: true
     dependencies:
       - package: Sparkle
