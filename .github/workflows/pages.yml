@@ -25,6 +25,8 @@ concurrency:
 
 env:
   SPARKLE_VERSION: "2.10.0"
+  # Sparkle-$SPARKLE_VERSION.tar.xz の SHA-256 (sign_update に秘密鍵を渡すので、改ざんされていないことを確かめる)
+  SPARKLE_SHA256: c2bf58aa8387266ac179357b1415d6f2635f044da8be41042af32425dae6da0c
 
 jobs:
   build:
@@ -36,8 +38,10 @@ jobs:
       - name: Install Sparkle tools
         run: |
           mkdir -p "$RUNNER_TEMP/sparkle"
-          curl -fsSL "https://github.com/sparkle-project/Sparkle/releases/download/$SPARKLE_VERSION/Sparkle-$SPARKLE_VERSION.tar.xz" \
-            | tar -xJ -C "$RUNNER_TEMP/sparkle" ./bin/sign_update
+          curl -fsSL -o "$RUNNER_TEMP/sparkle.tar.xz" \
+            "https://github.com/sparkle-project/Sparkle/releases/download/$SPARKLE_VERSION/Sparkle-$SPARKLE_VERSION.tar.xz"
+          echo "$SPARKLE_SHA256  $RUNNER_TEMP/sparkle.tar.xz" | shasum -a 256 -c -
+          tar -xJf "$RUNNER_TEMP/sparkle.tar.xz" -C "$RUNNER_TEMP/sparkle" ./bin/sign_update
           echo "SPARKLE_BIN=$RUNNER_TEMP/sparkle/bin" >> "$GITHUB_ENV"
 
       - name: Build site

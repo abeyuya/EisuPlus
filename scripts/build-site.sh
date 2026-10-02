@@ -21,8 +21,10 @@ rm -rf "$out"
 mkdir -p "$out"
 cp -R "$root/site/." "$out/"
 
-# 最新の正式リリース (prerelease と draft は含まれない)
-if tag="$(gh release view --repo "$repo" --json tagName --jq .tagName 2>/dev/null)"; then
+# 最新の正式リリース (prerelease と draft は含まれない)。リリースノートを HTML で受け取る
+# 404 (正式リリースがまだない) 以外のエラーで appcast を空にしてしまわないよう、エラーの中身で分ける
+if release="$(gh api "repos/$repo/releases/latest" -H "Accept: application/vnd.github.html+json" 2>"$work_dir/gh-error")"; then
+  tag="$(print -r -- "$release" | plutil -extract tag_name raw -)"
   gh release download "$tag" --repo "$repo" --pattern 'EisuPlus-*.zip' --dir "$work_dir"
   zips=("$work_dir"/EisuPlus-*.zip(N))
   if (( ${#zips} != 1 )); then
@@ -44,7 +46,6 @@ if tag="$(gh release view --repo "$repo" --json tagName --jq .tagName 2>/dev/nul
   signature="$(print -r -- "${SPARKLE_PRIVATE_KEY:?SPARKLE_PRIVATE_KEY がない}" \
     | "${SPARKLE_BIN:?SPARKLE_BIN がない}/sign_update" --ed-key-file - "$zip_path")"
 
-  release="$(gh api "repos/$repo/releases/tags/$tag" -H "Accept: application/vnd.github.html+json")"
   published_at="$(print -r -- "$release" | plutil -extract published_at raw -)"
   pub_date="$(LC_ALL=C date -j -u -f "%Y-%m-%dT%H:%M:%SZ" "$published_at" "+%a, %d %b %Y %H:%M:%S +0000")"
   # リリースノートは CDATA に入れるので、終端の `]]>` だけ分割しておく
@@ -64,13 +65,16 @@ if tag="$(gh release view --repo "$repo" --json tagName --jq .tagName 2>/dev/nul
     </item>"
   version_label="バージョン $version"
   echo "latest release: $tag ($version build $build_number)"
-else
+elif grep -q "HTTP 404" "$work_dir/gh-error"; then
   # 正式リリースがまだなければ、ダウンロードボタンはリリース一覧に向け、appcast は空にする
   echo "warning: 正式リリースがないので appcast.xml は空にする" >&2
   version_label="近日公開"
   minimum_system_version="15.0"
   download_url="https://github.com/$repo/releases"
   item=""
+else
+  cat "$work_dir/gh-error" >&2
+  exit 1
 fi
 
 # Sparkle は新しいバージョンがあるかどうかだけを見るので、最新の1件だけを載せる

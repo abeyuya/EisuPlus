@@ -27,14 +27,16 @@ targets:
     info:
       path: EisuMod/Info.plist
       properties:
-        CFBundleDisplayName: EisuPlus
-        CFBundleShortVersionString: $(MARKETING_VERSION)
-        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        LSUIElement: true
-        LSMinimumSystemVersion: "15.0"
-        LSApplicationCategoryType: public.app-category.utilities
-        ITSAppUsesNonExemptEncryption: false
-        NSHumanReadableCopyright: © 2026 Yuya Abe
+        # App Store 版と共通の項目
+        <<: &common_info_properties
+          CFBundleDisplayName: EisuPlus
+          CFBundleShortVersionString: $(MARKETING_VERSION)
+          CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+          LSUIElement: true
+          LSMinimumSystemVersion: "15.0"
+          LSApplicationCategoryType: public.app-category.utilities
+          ITSAppUsesNonExemptEncryption: false
+          NSHumanReadableCopyright: © 2026 Yuya Abe
         # Sparkle による自動アップデート。appcast.xml は GitHub Pages に置く（docs/RELEASE.md）
         SUFeedURL: https://abeyuya.github.io/EisuMod/appcast.xml
         SUPublicEDKey: ""
@@ -59,14 +61,7 @@ targets:
     info:
       path: Config/AppStore-Info.plist
       properties:
-        CFBundleDisplayName: EisuPlus
-        CFBundleShortVersionString: $(MARKETING_VERSION)
-        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        LSUIElement: true
-        LSMinimumSystemVersion: "15.0"
-        LSApplicationCategoryType: public.app-category.utilities
-        ITSAppUsesNonExemptEncryption: false
-        NSHumanReadableCopyright: © 2026 Yuya Abe
+        <<: *common_info_properties
     settings:
       base:
         CODE_SIGN_ENTITLEMENTS: Config/EisuMod-AppStore.entitlements
