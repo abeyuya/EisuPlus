@@ -29,7 +29,29 @@ env:
   SPARKLE_SHA256: c2bf58aa8387266ac179357b1415d6f2635f044da8be41042af32425dae6da0c
 
 jobs:
+  # Pages を有効にする (リポジトリを public にし、Source を GitHub Actions にする) までは、ビルドもデプロイもしない
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.pages.outputs.enabled }}
+    steps:
+      - id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if error="$(gh api "repos/$GITHUB_REPOSITORY/pages" --silent 2>&1)"; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          elif [[ "$error" == *"HTTP 404"* ]]; then
+            echo "::notice::GitHub Pages が有効になっていないので、デプロイしない"
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "$error" >&2
+            exit 1
+          fi
+
   build:
+    needs: check
+    if: needs.check.outputs.enabled == 'true'
     # Sparkle の sign_update が macOS 用なので macOS で動かす
     runs-on: macos-latest
     steps:
