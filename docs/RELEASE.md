@@ -28,8 +28,7 @@ git push origin v0.2.0
 
 アプリは https://abeyuya.github.io/EisuPlus/ で配布する。サイトのソースは `site/`。
 
-- リポジトリ名と配布 URL はアプリ名の EisuPlus だが、ターゲット・スキーム・バンドル ID (`com.github.abeyuya.EisuMod`) は旧名の EisuMod のまま。バンドル ID を変えるとアクセシビリティの許可と設定が引き継がれない
-- **リポジトリ名は変えない**。appcast の URL (`SUFeedURL`) は配布済みのアプリに埋め込まれていて、GitHub Pages は改名後の URL へ転送しないので、既存の利用者にアップデートが届かなくなる
+リポジトリ名と配布 URL はアプリ名の EisuPlus に合わせているが、ターゲット・スキーム・バンドル ID (`com.github.abeyuya.EisuMod`) は旧名の EisuMod のまま (バンドル ID を変えるとアクセシビリティの許可と設定が引き継がれない)。**今後はリポジトリ名を変えない**。appcast の URL (`SUFeedURL`) は配布済みのアプリに埋め込まれていて、GitHub Pages は改名後の URL へ転送しないので、既存の利用者にアップデートが届かなくなる。
 
 - `.github/workflows/pages.yml` (Deploy site) が `scripts/build-site.sh` でサイトを組み立てて GitHub Pages にデプロイする
   - 最新 (バージョンが最大) の正式リリースの zip に Sparkle の EdDSA 署名を付け、`appcast.xml` を書き出す。ダウンロードボタンもその zip に向ける
