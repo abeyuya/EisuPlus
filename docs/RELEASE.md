@@ -33,9 +33,11 @@ git push origin v0.2.0
 アプリは https://abeyuya.github.io/EisuMod/ で配布する。サイトのソースは `site/`。
 
 - `.github/workflows/pages.yml` (Deploy site) が `scripts/build-site.sh` でサイトを組み立てて GitHub Pages にデプロイする
-  - 最新の正式リリースの zip に Sparkle の EdDSA 署名を付け、`appcast.xml` を書き出す。ダウンロードボタンもその zip に向ける
+  - 最新 (バージョンが最大) の正式リリースの zip に Sparkle の EdDSA 署名を付け、`appcast.xml` を書き出す。ダウンロードボタンもその zip に向ける
   - 起動するのは、`site/` などを変えて `main` に push したとき、Xcode Cloud が正式リリースの zip をアップロードし終えたとき (`repository_dispatch`)、手動で実行したとき
 - アプリは Sparkle (`EisuMod/App/Updater.swift`) で `appcast.xml` を確認し、新しいバージョンがあればアップデートする。比べるのはビルド番号 (`CFBundleVersion`)
+  - 同じタグで Rebuild すると、ビルド番号だけが上がるので、そのバージョンを使っている人にも同じバージョンへの更新が届く。zip が置き換わる以上 appcast の署名も作り直す必要があるので、これは避けられない。修正を出すときはバージョンを上げる
+  - appcast に載せるのは、GitHub の latest ではなく、バージョン (`vX.Y.Z` のタグ) が最大の正式リリース。旧系統の hotfix を出しても、新しい系統の利用者に古いバージョンが配られることはない
 - App Store 版 (`EisuMod-AppStore`) には Sparkle を入れていない
 
 ### 初期設定 (初回のみ)
