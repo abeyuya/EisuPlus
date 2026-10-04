@@ -1,5 +1,3 @@
-// App Store 版では非公開 API（SkyLight）を使えないため、この機能ごと外す
-#if !APP_STORE
 import ColorSync
 @preconcurrency import CoreGraphics
 import Foundation
@@ -215,4 +213,3 @@ private enum ManagedSpaces {
         return CFUUIDCreateString(nil, uuid) as String?
     }
 }
-#endif

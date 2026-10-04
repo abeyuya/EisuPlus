@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EisuPlus</title>
+  <meta name="description" content="⌘キーの単押しで英数・かなを切り替え、修飾キーとマウスでウィンドウを移動・リサイズする macOS のメニューバーアプリ。無料。">
+  <link rel="icon" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site">
+    <div class="container">
+      <a class="brand" href="./"><img src="icon.png" alt="">EisuPlus</a>
+      <nav>
+        <a href="#features">機能</a>
+        <a href="#install">インストール</a>
+        <a href="privacy.html">プライバシー</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero container">
+      <img class="icon" src="icon.png" alt="EisuPlus のアイコン">
+      <h1>EisuPlus</h1>
+      <p class="lead">⌘キーで英数・かなを切り替え、修飾キーとマウスだけでウィンドウを動かす。メニューバーに常駐する小さな macOS アプリです。</p>
+      <a class="download" href="{{DOWNLOAD_URL}}">無料でダウンロード</a>
+      <p class="download-meta">{{VERSION_LABEL}} ・ macOS {{MINIMUM_SYSTEM_VERSION}} 以降 ・ Apple の公証済み</p>
+    </div>
+
+    <section id="features">
+      <div class="container">
+        <h2>できること</h2>
+        <div class="features">
+          <article class="feature">
+            <div class="keys"><kbd>左 ⌘</kbd> 英数 <kbd>右 ⌘</kbd> かな</div>
+            <h3>⌘の単押しで英数・かな</h3>
+            <p>US 配列のキーボードでも、JIS の英数キー・かなキーと同じ感覚で入力を切り替えられます。ショートカットで⌘を使ったときや長押ししたときは切り替わりません。</p>
+          </article>
+          <article class="feature">
+            <div class="keys"><kbd>⌃</kbd> + マウス移動</div>
+            <h3>ウィンドウを移動</h3>
+            <p>キーを押したままマウスを動かすと、カーソルの下のウィンドウがクリックなしでついてきます。タイトルバーを探す必要はありません。</p>
+          </article>
+          <article class="feature">
+            <div class="keys"><kbd>⌥</kbd> + マウス移動</div>
+            <h3>ウィンドウをリサイズ</h3>
+            <p>キーを押したままマウスを動かすと、ウィンドウの右下の角が動いてサイズが変わります。</p>
+          </article>
+          <article class="feature">
+            <div class="keys">左右の端 → 半分 ・ 上端 → 最大化</div>
+            <h3>画面の端にスナップ</h3>
+            <p>移動中にカーソルを画面の左右の端へ運ぶと画面の半分に、上端へ運ぶと最大化します。プレビューを見てからキーを離して確定します。</p>
+          </article>
+          <article class="feature">
+            <div class="keys">端に押し付けて待つ</div>
+            <h3>隣のデスクトップへ運ぶ</h3>
+            <p>移動中に左右の端へ押し付けたまま少し待つと、ウィンドウを隣のデスクトップへ運びます。</p>
+          </article>
+          <article class="feature">
+            <div class="keys"><kbd>fn</kbd> <kbd>⌃</kbd> <kbd>⌥</kbd> <kbd>⇧</kbd> <kbd>⌘</kbd></div>
+            <h3>キーの組み合わせは自由</h3>
+            <p>修飾キーと操作（マウス移動・左ドラッグ・右ドラッグ）の組み合わせを変えられます。移動やリサイズをしないアプリも指定できます。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="install">
+      <div class="container">
+        <h2>インストール</h2>
+        <ol class="steps">
+          <li>ダウンロードした zip を開き、<strong>EisuPlus.app</strong> を「アプリケーション」フォルダへ移動します。</li>
+          <li>EisuPlus を開くと、メニューバーにアイコンが表示され、アクセシビリティの許可を求められます。</li>
+          <li>「システム設定」›「プライバシーとセキュリティ」›「アクセシビリティ」で EisuPlus をオンにします。</li>
+          <li>新しいバージョンが出ると、アプリが自動でお知らせします。メニューの「アップデートを確認…」からも確認できます。</li>
+        </ol>
+        <div class="note">
+          <h3>アクセシビリティの許可が必要な理由</h3>
+          <p>⌘キーの単押しを見分けて英数・かなキーを送ることと、ほかのアプリのウィンドウを移動・リサイズすることに使います。</p>
+          <p>キー入力は⌘の単押しかどうかを判定するためにその場で見るだけで、記録や送信はしません。EisuPlus はデータを一切収集しません。</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site">
+    <div class="container">
+      <span>© 2026 Yuya Abe</span>
+      <nav>
+        <a href="privacy.html">プライバシーポリシー</a>
+        <a href="https://github.com/abeyuya/EisuPlus">GitHub</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>

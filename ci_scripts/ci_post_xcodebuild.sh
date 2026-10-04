@@ -6,7 +6,7 @@
 #   GITHUB_RELEASE_TOKEN                          : Contents: Read and write 権限の fine-grained PAT
 set -euo pipefail
 
-GITHUB_REPO="abeyuya/EisuMod"
+GITHUB_REPO="abeyuya/EisuPlus"
 
 if [[ "${CI_XCODEBUILD_ACTION:-}" != "archive" ]]; then
   echo "archive アクションではないのでスキップ"
@@ -14,11 +14,6 @@ if [[ "${CI_XCODEBUILD_ACTION:-}" != "archive" ]]; then
 fi
 if [[ "${CI_XCODEBUILD_EXIT_CODE:-1}" != "0" ]]; then
   echo "xcodebuild が失敗しているのでスキップ"
-  exit 0
-fi
-# App Store 用のスキーム (EisuMod-AppStore) は Xcode Cloud が App Store Connect へアップロードするので、ここでは扱わない
-if [[ "${CI_XCODE_SCHEME:-}" != "EisuMod" ]]; then
-  echo "EisuMod スキームではないのでスキップ"
   exit 0
 fi
 
@@ -131,3 +126,12 @@ curl -sS --fail-with-body "${api_headers[@]}" \
   --data-binary "@$asset_path" > /dev/null
 
 echo "uploaded: $asset_name -> release $release_tag"
+
+# 正式リリースなら、サイトのダウンロードリンクと Sparkle の appcast.xml を更新する (.github/workflows/pages.yml)
+# zip はもう公開できているので、失敗してもビルドは止めない (Actions から手動で再実行できる)
+if [[ "$prerelease" == false ]]; then
+  curl -sS --fail-with-body "${api_headers[@]}" \
+    -X POST "https://api.github.com/repos/$GITHUB_REPO/dispatches" \
+    -d '{"event_type":"release-uploaded"}' \
+    || echo "warning: サイトの更新を起動できなかった。Actions の Deploy site を手動で実行する" >&2
+fi
