@@ -18,7 +18,7 @@ packages:
     url: https://github.com/sparkle-project/Sparkle
     from: "2.10.0"
 targets:
-  # Web 配布用（Developer ID 署名・サンドボックスなし・Sparkle で自動アップデート）。隣のデスクトップへ運ぶ機能など非公開 API を使う機能を含む
+  # Developer ID 署名・サンドボックスなし・Sparkle で自動アップデート。隣のデスクトップへ運ぶ機能など非公開 API を使う機能を含む
   EisuMod:
     type: application
     platform: macOS
@@ -27,16 +27,13 @@ targets:
     info:
       path: EisuMod/Info.plist
       properties:
-        # App Store 版と共通の項目
-        <<: &common_info_properties
-          CFBundleDisplayName: EisuPlus
-          CFBundleShortVersionString: $(MARKETING_VERSION)
-          CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-          LSUIElement: true
-          LSMinimumSystemVersion: "15.0"
-          LSApplicationCategoryType: public.app-category.utilities
-          ITSAppUsesNonExemptEncryption: false
-          NSHumanReadableCopyright: © 2026 Yuya Abe
+        CFBundleDisplayName: EisuPlus
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSUIElement: true
+        LSMinimumSystemVersion: "15.0"
+        LSApplicationCategoryType: public.app-category.utilities
+        NSHumanReadableCopyright: © 2026 Yuya Abe
         # Sparkle による自動アップデート。appcast.xml は GitHub Pages に置く（docs/RELEASE.md）
         SUFeedURL: https://abeyuya.github.io/EisuMod/appcast.xml
         SUPublicEDKey: j2d/9tqvxqK80oVnmgBMRAN555duYgxg1ZD0Nn8Ew4M=
@@ -51,36 +48,11 @@ targets:
         ENABLE_HARDENED_RUNTIME: YES
         ENABLE_APP_SANDBOX: NO
 
-  # Mac App Store 用。サンドボックスを有効にし、非公開 API を使う機能を APP_STORE フラグで外す
-  EisuMod-AppStore:
-    type: application
-    platform: macOS
-    sources:
-      - EisuMod
-    # Sparkle の設定を含めないため、Web 配布用とは別の Info.plist にする
-    info:
-      path: Config/AppStore-Info.plist
-      properties:
-        <<: *common_info_properties
-    settings:
-      base:
-        CODE_SIGN_ENTITLEMENTS: Config/EisuMod-AppStore.entitlements
-        CODE_SIGN_STYLE: Automatic
-        ENABLE_APP_SANDBOX: YES
-        ENABLE_HARDENED_RUNTIME: YES
-        ENABLE_USER_SELECTED_FILES: readonly
-        SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) APP_STORE
 schemes:
   # Xcode Cloud は共有スキームが必要
   EisuMod:
     build:
       targets:
         EisuMod: all
-    archive:
-      config: Release
-  EisuMod-AppStore:
-    build:
-      targets:
-        EisuMod-AppStore: all
     archive:
       config: Release

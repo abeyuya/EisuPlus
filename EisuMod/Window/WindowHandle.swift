@@ -52,7 +52,6 @@ enum WindowHandle {
         }
     }
 
-    #if !APP_STORE
     /// ウィンドウサーバーから見たフレーム。AX の値は Electron 系などで更新が遅れることがあるため、
     /// 実際に動いたかを確かめるときはこちらを使う
     var serverFrame: CGRect? {
@@ -76,7 +75,6 @@ enum WindowHandle {
         case .own(let number): number
         }
     }
-    #endif
 
     var appName: String {
         switch self {

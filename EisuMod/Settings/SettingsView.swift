@@ -14,9 +14,7 @@ struct SettingsView: View {
                 if let error = loginItem.errorMessage {
                     Text(error).font(.caption).foregroundStyle(.red)
                 }
-                #if !APP_STORE
                 AutomaticUpdateToggle()
-                #endif
             }
 
             Section("入力切り替え") {
@@ -31,10 +29,8 @@ struct SettingsView: View {
                     .disabled(!settings.moveEnabled)
                 Toggle("画面の上端で最大化", isOn: $settings.snapTopMaximizeEnabled)
                     .disabled(!settings.moveEnabled || !settings.snapEnabled)
-                #if !APP_STORE
                 Toggle("左端・右端に押し付けたまま待つと隣のデスクトップへ移動", isOn: $settings.spaceCarryEnabled)
                     .disabled(!settings.moveEnabled)
-                #endif
             }
 
             Section("ウィンドウリサイズ（右下の角を動かす）") {
@@ -63,7 +59,6 @@ struct SettingsView: View {
     }
 }
 
-#if !APP_STORE
 private struct AutomaticUpdateToggle: View {
     @Environment(Updater.self) private var updater
 
@@ -71,7 +66,6 @@ private struct AutomaticUpdateToggle: View {
         Toggle("アップデートを自動で確認", isOn: Bindable(updater).automaticallyChecksForUpdates)
     }
 }
-#endif
 
 private struct ExcludedAppsEditor: View {
     @Binding var bundleIDs: Set<String>

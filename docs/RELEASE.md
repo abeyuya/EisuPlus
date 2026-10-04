@@ -12,10 +12,6 @@ git push origin v0.2.0
 
 タグ以外 (ブランチ / PR) で起動された Archive も、`build-<ビルド番号>` タグの **prerelease** として `EisuPlus-<version>-build<ビルド番号>.zip` をアップロードする。prerelease は `install-latest.sh` の「最新リリース」には含まれない。
 
-## App Store 向けビルド
-
-同じワークフローに `EisuMod-AppStore` スキームの Archive アクションも入れておき、Developer ID 版と一緒に App Store 版をビルドする。App Store 版は Xcode Cloud が App Store Connect (TestFlight) へアップロードするだけで、`ci_post_xcodebuild.sh` は何もしない。審査への提出は App Store Connect で手動で行う。詳しくは [APP_STORE.md](APP_STORE.md)。
-
 ## リリース PR
 
 `main` に push されると GitHub Actions (`.github/workflows/create-release-pr.yml`) が [git-pr-release](https://github.com/x-motemen/git-pr-release) で `main` → `release/production` のリリース PR を作成・更新する。PR 本文には前回リリース以降に `main` へマージされた PR がチェックリストで並ぶ。
@@ -38,7 +34,6 @@ git push origin v0.2.0
 - アプリは Sparkle (`EisuMod/App/Updater.swift`) で `appcast.xml` を確認し、新しいバージョンがあればアップデートする。比べるのはビルド番号 (`CFBundleVersion`)
   - 同じタグで Rebuild すると、ビルド番号だけが上がるので、そのバージョンを使っている人にも同じバージョンへの更新が届く。zip が置き換わる以上 appcast の署名も作り直す必要があるので、これは避けられない。修正を出すときはバージョンを上げる
   - appcast に載せるのは、GitHub の latest ではなく、バージョン (`vX.Y.Z` のタグ) が最大の正式リリース。旧系統の hotfix を出しても、新しい系統の利用者に古いバージョンが配られることはない
-- App Store 版 (`EisuMod-AppStore`) には Sparkle を入れていない
 
 ### 初期設定 (初回のみ)
 
@@ -87,7 +82,6 @@ private リポジトリなので `gh auth login` 済みであること。
 3. ワークフローを編集
    - Start Conditions: **Tag Changes** を追加 (Custom Tags: `v` で始まるもの)。ブランチ起動のビルドも prerelease として欲しければ Branch Changes も残す
    - Actions: **Archive** (Platform: macOS, Scheme: EisuMod)
-   - Actions: **Archive** をもう1つ追加 (Platform: macOS, Scheme: **EisuMod-AppStore**, Deployment Preparation: **TestFlight and App Store**)
    - Environment → Environment Variables に以下を追加し、すべて **Secret** にチェック
 
 | 名前 | 値 |

@@ -1,10 +1,8 @@
-#if !APP_STORE
 import Foundation
 import Observation
 import Sparkle
 
 /// Sparkle による自動アップデート。appcast.xml は GitHub Pages に置く（docs/RELEASE.md）。
-/// App Store 版はストアが更新するので使わない。
 @MainActor
 @Observable
 final class Updater: NSObject {
@@ -59,4 +57,3 @@ extension Updater: @preconcurrency SPUStandardUserDriverDelegate {
         pendingVersion = nil
     }
 }
-#endif

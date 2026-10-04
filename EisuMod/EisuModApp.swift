@@ -11,9 +11,7 @@ struct EisuModApp: App {
 
         Window("EisuPlus 設定", id: SettingsView.windowID) {
             SettingsView(settings: Bindable(model.settingsStore).settings)
-                #if !APP_STORE
                 .environment(model.updater)
-                #endif
         }
         .windowResizability(.contentSize)
         .defaultLaunchBehavior(.suppressed)
@@ -39,11 +37,9 @@ private struct MenuContent: View {
         case .tapFailed:
             Text("イベントタップの起動に失敗しました（再試行中）")
         }
-        #if !APP_STORE
         if let version = model.updater.pendingVersion {
             Button("新しいバージョン \(version) があります…") { model.updater.checkForUpdates() }
         }
-        #endif
 
         Divider()
 
@@ -60,10 +56,8 @@ private struct MenuContent: View {
             NSApplication.shared.activate()
         }
         .keyboardShortcut(",")
-        #if !APP_STORE
         Button("アップデートを確認…") { model.updater.checkForUpdates() }
             .disabled(!model.updater.canCheckForUpdates)
-        #endif
         Button("終了") { NSApplication.shared.terminate(nil) }
             .keyboardShortcut("q")
     }
