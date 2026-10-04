@@ -14,6 +14,9 @@ settings:
     ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     GENERATE_INFOPLIST_FILE: NO
 packages:
+  # バージョンはルートの Package.resolved で固定する (Xcode Cloud は自動解決しないので必須。ci_scripts/ci_post_clone.sh)
+  # 上げるときは、生成した xcodeproj の project.xcworkspace/xcshareddata/swiftpm/Package.resolved を消してから
+  # `xcodebuild -resolvePackageDependencies` し、できた Package.resolved をルートにコピーする
   Sparkle:
     url: https://github.com/sparkle-project/Sparkle
     from: "2.10.0"
