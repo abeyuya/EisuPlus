@@ -1,6 +1,9 @@
 name: EisuMod
 options:
   bundleIdPrefix: com.github.abeyuya
+  # Swift パッケージのバージョンはルートの Package.resolved で固定し、生成のたびに xcodeproj へ置く
+  # (Xcode Cloud はパッケージを自動解決しないので必須。手元のビルドも同じバージョンにそろえる)
+  postGenCommand: mkdir -p EisuMod.xcodeproj/project.xcworkspace/xcshareddata/swiftpm && cp Package.resolved EisuMod.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
   deploymentTarget:
     macOS: "15.0"
 settings:
@@ -14,6 +17,9 @@ settings:
     ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     GENERATE_INFOPLIST_FILE: NO
 packages:
+  # 上げるときは、生成した xcodeproj の project.xcworkspace/xcshareddata/swiftpm/Package.resolved を消してから
+  # `xcodebuild -resolvePackageDependencies` し、できた Package.resolved をルートにコピーする。
+  # Sparkle なら .github/workflows/pages.yml の SPARKLE_VERSION と SPARKLE_SHA256 も合わせる
   Sparkle:
     url: https://github.com/sparkle-project/Sparkle
     from: "2.10.0"
