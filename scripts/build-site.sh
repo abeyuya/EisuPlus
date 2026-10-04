@@ -9,8 +9,8 @@
 #   SPARKLE_BIN         : Sparkle の配布物の bin ディレクトリ (sign_update がある場所)
 set -euo pipefail
 
-repo="${GITHUB_REPOSITORY:-abeyuya/EisuMod}"
-site_url="https://abeyuya.github.io/EisuMod"
+repo="${GITHUB_REPOSITORY:-abeyuya/EisuPlus}"
+site_url="https://${repo%%/*}.github.io/${repo#*/}"
 out="${1:?出力ディレクトリを指定する}"
 root="${0:A:h:h}"
 

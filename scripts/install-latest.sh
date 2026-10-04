@@ -3,7 +3,7 @@
 # 事前に `gh auth login` が必要 (private リポジトリのため)
 set -euo pipefail
 
-repo="abeyuya/EisuMod"
+repo="abeyuya/EisuPlus"
 tag="${1:-}"  # 省略時は最新リリース
 
 work_dir="$(mktemp -d)"

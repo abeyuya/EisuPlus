@@ -26,7 +26,9 @@ git push origin v0.2.0
 
 ## Web 配布 (GitHub Pages + Sparkle)
 
-アプリは https://abeyuya.github.io/EisuMod/ で配布する。サイトのソースは `site/`。
+アプリは https://abeyuya.github.io/EisuPlus/ で配布する。サイトのソースは `site/`。
+
+リポジトリ名と配布 URL はアプリ名の EisuPlus に合わせているが、ターゲット・スキーム・バンドル ID (`com.github.abeyuya.EisuMod`) は旧名の EisuMod のまま (バンドル ID を変えるとアクセシビリティの許可と設定が引き継がれない)。**今後はリポジトリ名を変えない**。appcast の URL (`SUFeedURL`) は配布済みのアプリに埋め込まれていて、GitHub Pages は改名後の URL へ転送しないので、既存の利用者にアップデートが届かなくなる。
 
 - `.github/workflows/pages.yml` (Deploy site) が `scripts/build-site.sh` でサイトを組み立てて GitHub Pages にデプロイする
   - 最新 (バージョンが最大) の正式リリースの zip に Sparkle の EdDSA 署名を付け、`appcast.xml` を書き出す。ダウンロードボタンもその zip に向ける
@@ -70,7 +72,7 @@ private リポジトリなので `gh auth login` 済みであること。
 - App Store Connect → ユーザとアクセス → 統合 → App Store Connect API でキーを発行 (アクセス: Developer)
   - Key ID / Issuer ID / `.p8` ファイルを控える
 - GitHub で fine-grained PAT を発行
-  - Repository access: `abeyuya/EisuMod` のみ
+  - Repository access: `abeyuya/EisuPlus` のみ
   - Permissions: Contents → Read and write
 - Developer ID Application 証明書を `.p12` で書き出す: `./scripts/export-developer-id-p12.sh` を実行すると、`DEVELOPER_ID_P12_BASE64` と `DEVELOPER_ID_P12_PASSWORD` の値が順にクリップボードに入る (ファイルは残らない)
   - Xcode Cloud は Developer ID 版を書き出さず (Distribution Preparation に Developer ID がない)、API キーでは Developer ID のクラウド署名もできない。そのため `ci_post_xcodebuild.sh` がこの証明書で archive から Developer ID 版を書き出す
