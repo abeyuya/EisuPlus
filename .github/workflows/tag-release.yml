@@ -26,6 +26,12 @@ jobs:
 
       - name: Tag the next version
         run: |
+          # 古い実行を再実行したときに、新しいコミットより大きいバージョンを古いコミットに付けない
+          git fetch --quiet origin release/production
+          if [[ "$(git rev-parse HEAD)" != "$(git rev-parse FETCH_HEAD)" ]]; then
+            echo "::notice::release/production はこのコミットより先に進んでいるので、タグを付けない"
+            exit 0
+          fi
           version="$(scripts/next-release-version.sh)"
           if [[ -z "$version" ]]; then
             echo "::notice::このコミットにはすでにバージョンのタグが付いている"

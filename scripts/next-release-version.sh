@@ -27,7 +27,8 @@ if [[ -z "$latest" ]]; then
 fi
 
 IFS=. read -r major minor patch <<< "${latest#v}"
-next="$major.$minor.$((patch + 1))"
+# 10# を付けないと、08 のような 0 始まりが 8 進数として扱われてエラーになる
+next="$major.$minor.$((10#$patch + 1))"
 if [[ "$(printf '%s\n' "$next" "$marketing" | sort -V | tail -n 1)" == "$marketing" ]]; then
   next="$marketing"
 fi
