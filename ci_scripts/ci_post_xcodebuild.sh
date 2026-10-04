@@ -6,7 +6,7 @@
 #   GITHUB_RELEASE_TOKEN                          : Contents: Read and write 権限の fine-grained PAT
 set -euo pipefail
 
-GITHUB_REPO="abeyuya/EisuMod"
+GITHUB_REPO="abeyuya/EisuPlus"
 
 if [[ "${CI_XCODEBUILD_ACTION:-}" != "archive" ]]; then
   echo "archive アクションではないのでスキップ"
