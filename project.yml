@@ -9,7 +9,9 @@ options:
 settings:
   base:
     SWIFT_VERSION: "6.0"
-    MARKETING_VERSION: "0.1.0"
+    # 正式リリースのバージョンは、release/production に push されたときに最新の vX.Y.Z の次のパッチになる。
+    # マイナー・メジャーを上げるときはここを上げる (scripts/next-release-version.sh)
+    MARKETING_VERSION: "0.2.0"
     CURRENT_PROJECT_VERSION: "1"
     DEVELOPMENT_TEAM: 37XL3EDJ44
     PRODUCT_NAME: EisuPlus

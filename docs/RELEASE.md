@@ -1,17 +1,17 @@
 # リリース手順
 
-`v*` タグを push すると Xcode Cloud がビルド → 公証 → GitHub Release へのアップロードまで行う。
+リリース PR (`main` → `release/production`) をマージすると、正式リリースまで自動で進む。
 
-```sh
-git tag v0.2.0
-git push origin v0.2.0
-```
+1. `release/production` への push で、GitHub Actions (`.github/workflows/tag-release.yml`) が次のバージョンのタグ `vX.Y.Z` を付ける
+   - バージョンは最新の `vX.Y.Z` の次のパッチ。`project.yml` の `MARKETING_VERSION` のほうが大きければそれになる。マイナー・メジャーを上げるときは、リリース PR をマージする前に `MARKETING_VERSION` を上げておく (`scripts/next-release-version.sh`)
+   - コミットにすでに `vX.Y.Z` が付いていれば何もしない
+2. Xcode Cloud がタグからビルド → 公証 → GitHub Release へのアップロードまで行う
 
 - `ci_scripts/ci_post_clone.sh`: xcodegen で xcodeproj を生成。タグからバージョン (`MARKETING_VERSION`)、`CI_BUILD_NUMBER` からビルド番号を設定
   - Xcode Cloud はパッケージを自動解決しないので、Swift パッケージのバージョンはルートの `Package.resolved` で固定している。`xcodegen generate` のたびに xcodeproj へコピーされる (`project.yml` の `postGenCommand`)
 - `ci_scripts/ci_post_xcodebuild.sh`: Developer ID 署名済みアプリを notarytool で公証・staple し、`EisuPlus-<version>.zip` を GitHub Release にアップロード。正式リリースなら最後に GitHub Actions の Deploy site を起動する（[Web 配布](#web-配布-github-pages--sparkle)）
 
-タグ以外 (ブランチ / PR) で起動された Archive も、`build-<ビルド番号>` タグの **prerelease** として `EisuPlus-<version>-build<ビルド番号>.zip` をアップロードする。prerelease は `install-latest.sh` の「最新リリース」には含まれない。
+タグ以外 (ブランチ / PR) で起動された Archive は、`build-<ビルド番号>` タグの **prerelease** として `EisuPlus-<version>-build<ビルド番号>.zip` をアップロードする。prerelease は `install-latest.sh` の「最新リリース」には含まれない。
 
 ## リリース PR
 
@@ -84,6 +84,7 @@ private リポジトリなので `gh auth login` 済みであること。
 2. Integrate → Create Workflow… (GitHub 連携と App Store Connect のアプリ登録を求められたら従う)
 3. ワークフローを編集
    - Start Conditions: **Tag Changes** を追加 (Custom Tags: `v` で始まるもの)。ブランチ起動のビルドも prerelease として欲しければ Branch Changes も残す
+     - Branch Changes に `release/production` を含めない。含めると、リリースのたびにタグからの正式リリースと同じコミットの prerelease が二重にビルドされる
    - Actions: **Archive** (Platform: macOS, Scheme: EisuMod)
    - Environment → Environment Variables に以下を追加し、すべて **Secret** にチェック
 

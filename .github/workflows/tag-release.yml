@@ -1,0 +1,36 @@
+name: Tag a release
+
+# release/production に push されたら (リリース PR をマージしたら) 次のバージョンのタグ (vX.Y.Z) を付ける。
+# Xcode Cloud がタグからビルドし、正式リリースとして GitHub Release にアップロードする (docs/RELEASE.md)
+on:
+  push:
+    branches:
+      - release/production
+
+permissions:
+  contents: write
+
+# 続けて push されても、前のタグを見てから次のバージョンを決める
+concurrency:
+  group: tag-release
+  cancel-in-progress: false
+
+jobs:
+  tag-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # バージョンを決めるのにすべてのタグが要る
+          fetch-depth: 0
+
+      - name: Tag the next version
+        run: |
+          version="$(scripts/next-release-version.sh)"
+          if [[ -z "$version" ]]; then
+            echo "::notice::このコミットにはすでにバージョンのタグが付いている"
+            exit 0
+          fi
+          git tag "v$version"
+          git push origin "v$version"
+          echo "::notice::v$version を付けた"
