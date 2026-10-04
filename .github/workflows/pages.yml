@@ -1,0 +1,89 @@
+name: Deploy site
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - site/**
+      - scripts/build-site.sh
+      - .github/workflows/pages.yml
+  # Xcode Cloud が正式リリースの zip をアップロードし終えたら送ってくる (ci_scripts/ci_post_xcodebuild.sh)
+  repository_dispatch:
+    types:
+      - release-uploaded
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  SPARKLE_VERSION: "2.10.0"
+  # Sparkle-$SPARKLE_VERSION.tar.xz の SHA-256 (sign_update に秘密鍵を渡すので、改ざんされていないことを確かめる)
+  SPARKLE_SHA256: c2bf58aa8387266ac179357b1415d6f2635f044da8be41042af32425dae6da0c
+
+jobs:
+  # Pages を有効にする (リポジトリを public にし、Source を GitHub Actions にする) までは、ビルドもデプロイもしない
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.pages.outputs.enabled }}
+    steps:
+      - id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if error="$(gh api "repos/$GITHUB_REPOSITORY/pages" --silent 2>&1)"; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          elif [[ "$error" == *"HTTP 404"* ]]; then
+            echo "::notice::GitHub Pages が有効になっていないので、デプロイしない"
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "$error" >&2
+            exit 1
+          fi
+
+  build:
+    needs: check
+    if: needs.check.outputs.enabled == 'true'
+    # Sparkle の sign_update が macOS 用なので macOS で動かす
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Sparkle tools
+        run: |
+          mkdir -p "$RUNNER_TEMP/sparkle"
+          curl -fsSL -o "$RUNNER_TEMP/sparkle.tar.xz" \
+            "https://github.com/sparkle-project/Sparkle/releases/download/$SPARKLE_VERSION/Sparkle-$SPARKLE_VERSION.tar.xz"
+          echo "$SPARKLE_SHA256  $RUNNER_TEMP/sparkle.tar.xz" | shasum -a 256 -c -
+          tar -xJf "$RUNNER_TEMP/sparkle.tar.xz" -C "$RUNNER_TEMP/sparkle" ./bin/sign_update
+          echo "SPARKLE_BIN=$RUNNER_TEMP/sparkle/bin" >> "$GITHUB_ENV"
+
+      - name: Build site
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: scripts/build-site.sh "$RUNNER_TEMP/site"
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: ${{ runner.temp }}/site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

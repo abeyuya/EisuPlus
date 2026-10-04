@@ -14,6 +14,7 @@ struct SettingsView: View {
                 if let error = loginItem.errorMessage {
                     Text(error).font(.caption).foregroundStyle(.red)
                 }
+                AutomaticUpdateToggle()
             }
 
             Section("入力切り替え") {
@@ -55,6 +56,14 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .frame(width: 460)
         .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+private struct AutomaticUpdateToggle: View {
+    @Environment(Updater.self) private var updater
+
+    var body: some View {
+        Toggle("アップデートを自動で確認", isOn: Bindable(updater).automaticallyChecksForUpdates)
     }
 }
 

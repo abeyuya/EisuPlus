@@ -13,8 +13,12 @@ settings:
     PRODUCT_BUNDLE_IDENTIFIER: com.github.abeyuya.EisuMod
     ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     GENERATE_INFOPLIST_FILE: NO
+packages:
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: "2.10.0"
 targets:
-  # Developer ID 署名・サンドボックスなし。隣のデスクトップへ運ぶ機能など非公開 API を使う機能を含む
+  # Developer ID 署名・サンドボックスなし・Sparkle で自動アップデート。隣のデスクトップへ運ぶ機能など非公開 API を使う機能を含む
   EisuMod:
     type: application
     platform: macOS
@@ -30,6 +34,12 @@ targets:
         LSMinimumSystemVersion: "15.0"
         LSApplicationCategoryType: public.app-category.utilities
         NSHumanReadableCopyright: © 2026 Yuya Abe
+        # Sparkle による自動アップデート。appcast.xml は GitHub Pages に置く（docs/RELEASE.md）
+        SUFeedURL: https://abeyuya.github.io/EisuMod/appcast.xml
+        SUPublicEDKey: j2d/9tqvxqK80oVnmgBMRAN555duYgxg1ZD0Nn8Ew4M=
+        SUEnableAutomaticChecks: true
+    dependencies:
+      - package: Sparkle
     settings:
       base:
         # Xcode Cloud のクラウド署名は自動署名が前提。ローカルの scripts/install.sh では Developer ID に上書きする

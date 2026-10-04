@@ -8,7 +8,7 @@ git push origin v0.2.0
 ```
 
 - `ci_scripts/ci_post_clone.sh`: xcodegen で xcodeproj を生成。タグからバージョン (`MARKETING_VERSION`)、`CI_BUILD_NUMBER` からビルド番号を設定
-- `ci_scripts/ci_post_xcodebuild.sh`: Developer ID 署名済みアプリを notarytool で公証・staple し、`EisuPlus-<version>.zip` を GitHub Release にアップロード
+- `ci_scripts/ci_post_xcodebuild.sh`: Developer ID 署名済みアプリを notarytool で公証・staple し、`EisuPlus-<version>.zip` を GitHub Release にアップロード。正式リリースなら最後に GitHub Actions の Deploy site を起動する（[Web 配布](#web-配布-github-pages--sparkle)）
 
 タグ以外 (ブランチ / PR) で起動された Archive も、`build-<ビルド番号>` タグの **prerelease** として `EisuPlus-<version>-build<ビルド番号>.zip` をアップロードする。prerelease は `install-latest.sh` の「最新リリース」には含まれない。
 
@@ -23,6 +23,36 @@ git push origin v0.2.0
   git push origin v0.1.0:refs/heads/release/production   # 直近リリースのタグから切る
   ```
 - Settings → Actions → General → Workflow permissions で **Allow GitHub Actions to create and approve pull requests** を有効にする
+
+## Web 配布 (GitHub Pages + Sparkle)
+
+アプリは https://abeyuya.github.io/EisuMod/ で配布する。サイトのソースは `site/`。
+
+- `.github/workflows/pages.yml` (Deploy site) が `scripts/build-site.sh` でサイトを組み立てて GitHub Pages にデプロイする
+  - 最新 (バージョンが最大) の正式リリースの zip に Sparkle の EdDSA 署名を付け、`appcast.xml` を書き出す。ダウンロードボタンもその zip に向ける
+  - 起動するのは、`site/` などを変えて `main` に push したとき、Xcode Cloud が正式リリースの zip をアップロードし終えたとき (`repository_dispatch`)、手動で実行したとき
+- アプリは Sparkle (`EisuMod/App/Updater.swift`) で `appcast.xml` を確認し、新しいバージョンがあればアップデートする。比べるのはビルド番号 (`CFBundleVersion`)
+  - 同じタグで Rebuild すると、ビルド番号だけが上がるので、そのバージョンを使っている人にも同じバージョンへの更新が届く。zip が置き換わる以上 appcast の署名も作り直す必要があるので、これは避けられない。修正を出すときはバージョンを上げる
+  - appcast に載せるのは、GitHub の latest ではなく、バージョン (`vX.Y.Z` のタグ) が最大の正式リリース。旧系統の hotfix を出しても、新しい系統の利用者に古いバージョンが配られることはない
+
+### 初期設定 (初回のみ)
+
+1. Sparkle の鍵を作る。秘密鍵はログインキーチェーンに保存され、公開鍵が表示される
+   ```sh
+   xcodegen generate -q && xcodebuild -project EisuMod.xcodeproj -scheme EisuMod -derivedDataPath build -resolvePackageDependencies
+   build/SourcePackages/artifacts/sparkle/Sparkle/bin/generate_keys
+   ```
+2. 公開鍵を `project.yml` の `SUPublicEDKey` に書き、`xcodegen generate` して `EisuMod/Info.plist` もコミットする
+   - 空のままだと、Sparkle が起動時に「アップデートを確認できない」というエラーを出す
+3. 秘密鍵を GitHub Actions の Secret `SPARKLE_PRIVATE_KEY` に登録する
+   ```sh
+   build/SourcePackages/artifacts/sparkle/Sparkle/bin/generate_keys -x /tmp/sparkle_private.key
+   gh secret set SPARKLE_PRIVATE_KEY < /tmp/sparkle_private.key && rm /tmp/sparkle_private.key
+   ```
+   - **秘密鍵をなくすと、配布済みのアプリにアップデートを届けられなくなる**。キーチェーンの「ed25519」(Private key for signing Sparkle updates) をパスワードマネージャなどにも控えておく
+4. リポジトリの Settings → Pages → Build and deployment → Source を **GitHub Actions** にする
+   - private リポジトリで Pages を使うには有料プランが必要。また、private のままだと Release の zip を他の人がダウンロードできない。**公開はリポジトリを public にしてから**
+5. Xcode Cloud の `GITHUB_RELEASE_TOKEN` は Contents: Read and write があれば `repository_dispatch` も送れるので、追加の設定はいらない
 
 ## 他の Mac へのインストール
 
