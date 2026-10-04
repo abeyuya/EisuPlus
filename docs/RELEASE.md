@@ -8,6 +8,7 @@ git push origin v0.2.0
 ```
 
 - `ci_scripts/ci_post_clone.sh`: xcodegen で xcodeproj を生成。タグからバージョン (`MARKETING_VERSION`)、`CI_BUILD_NUMBER` からビルド番号を設定
+  - Xcode Cloud はパッケージを自動解決しないので、Swift パッケージのバージョンはルートの `Package.resolved` で固定している。`xcodegen generate` のたびに xcodeproj へコピーされる (`project.yml` の `postGenCommand`)
 - `ci_scripts/ci_post_xcodebuild.sh`: Developer ID 署名済みアプリを notarytool で公証・staple し、`EisuPlus-<version>.zip` を GitHub Release にアップロード。正式リリースなら最後に GitHub Actions の Deploy site を起動する（[Web 配布](#web-配布-github-pages--sparkle)）
 
 タグ以外 (ブランチ / PR) で起動された Archive も、`build-<ビルド番号>` タグの **prerelease** として `EisuPlus-<version>-build<ビルド番号>.zip` をアップロードする。prerelease は `install-latest.sh` の「最新リリース」には含まれない。
