@@ -16,11 +16,6 @@ if [[ "${CI_XCODEBUILD_EXIT_CODE:-1}" != "0" ]]; then
   echo "xcodebuild が失敗しているのでスキップ"
   exit 0
 fi
-# App Store 用のスキーム (EisuMod-AppStore) は Xcode Cloud が App Store Connect へアップロードするので、ここでは扱わない
-if [[ "${CI_XCODE_SCHEME:-}" != "EisuMod" ]]; then
-  echo "EisuMod スキームではないのでスキップ"
-  exit 0
-fi
 
 work_dir="$(mktemp -d)"
 key_path="$work_dir/AuthKey.p8"

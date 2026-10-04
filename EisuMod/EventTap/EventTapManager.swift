@@ -73,12 +73,10 @@ final class EventTapManager: @unchecked Sendable {
             if let tap { CGEvent.tapEnable(tap: tap, enable: true) }
             return Unmanaged.passUnretained(event)
         }
-        #if !APP_STORE
         // EisuPlus 自身が合成したイベント（隣のデスクトップへ運ぶ操作など）は判定に使わない
         if event.getIntegerValueField(.eventSourceUserData) == SpaceCarrier.syntheticEventMarker {
             return Unmanaged.passUnretained(event)
         }
-        #endif
         var swallow = false
         for handler in handlers where handler.eventTypes.contains(type) {
             // 握りつぶす場合も全ハンドラに通知する（⌘単押しのキャンセル判定などのため）

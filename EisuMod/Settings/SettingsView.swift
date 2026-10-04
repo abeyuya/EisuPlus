@@ -28,10 +28,8 @@ struct SettingsView: View {
                     .disabled(!settings.moveEnabled)
                 Toggle("画面の上端で最大化", isOn: $settings.snapTopMaximizeEnabled)
                     .disabled(!settings.moveEnabled || !settings.snapEnabled)
-                #if !APP_STORE
                 Toggle("左端・右端に押し付けたまま待つと隣のデスクトップへ移動", isOn: $settings.spaceCarryEnabled)
                     .disabled(!settings.moveEnabled)
-                #endif
             }
 
             Section("ウィンドウリサイズ（右下の角を動かす）") {

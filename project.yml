@@ -14,7 +14,7 @@ settings:
     ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     GENERATE_INFOPLIST_FILE: NO
 targets:
-  # 自分用（Developer ID 署名・サンドボックスなし）。隣のデスクトップへ運ぶ機能など非公開 API を使う機能を含む
+  # Developer ID 署名・サンドボックスなし。隣のデスクトップへ運ぶ機能など非公開 API を使う機能を含む
   EisuMod:
     type: application
     platform: macOS
@@ -29,7 +29,6 @@ targets:
         LSUIElement: true
         LSMinimumSystemVersion: "15.0"
         LSApplicationCategoryType: public.app-category.utilities
-        ITSAppUsesNonExemptEncryption: false
         NSHumanReadableCopyright: © 2026 Yuya Abe
     settings:
       base:
@@ -39,32 +38,11 @@ targets:
         ENABLE_HARDENED_RUNTIME: YES
         ENABLE_APP_SANDBOX: NO
 
-  # Mac App Store 用。サンドボックスを有効にし、非公開 API を使う機能を APP_STORE フラグで外す
-  EisuMod-AppStore:
-    type: application
-    platform: macOS
-    sources:
-      - EisuMod
-    settings:
-      base:
-        INFOPLIST_FILE: EisuMod/Info.plist
-        CODE_SIGN_ENTITLEMENTS: Config/EisuMod-AppStore.entitlements
-        CODE_SIGN_STYLE: Automatic
-        ENABLE_APP_SANDBOX: YES
-        ENABLE_HARDENED_RUNTIME: YES
-        ENABLE_USER_SELECTED_FILES: readonly
-        SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) APP_STORE
 schemes:
   # Xcode Cloud は共有スキームが必要
   EisuMod:
     build:
       targets:
         EisuMod: all
-    archive:
-      config: Release
-  EisuMod-AppStore:
-    build:
-      targets:
-        EisuMod-AppStore: all
     archive:
       config: Release
