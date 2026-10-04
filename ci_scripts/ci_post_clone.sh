@@ -16,8 +16,3 @@ if [[ -n "${CI_BUILD_NUMBER:-}" ]]; then
 fi
 
 xcodegen generate
-
-# Xcode Cloud はパッケージの自動解決を無効にしてビルドするので、バージョンを固定した Package.resolved を生成した xcodeproj に置く
-resolved_dir="EisuMod.xcodeproj/project.xcworkspace/xcshareddata/swiftpm"
-mkdir -p "$resolved_dir"
-cp Package.resolved "$resolved_dir/"
