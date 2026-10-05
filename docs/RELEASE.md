@@ -1,11 +1,14 @@
 # リリース手順
 
-リリース PR (`main` → `release/production`) をマージすると、正式リリースまで自動で進む。
+リリースするバージョンは常に `project.yml` の `MARKETING_VERSION`。
 
-1. `release/production` への push で、GitHub Actions (`.github/workflows/tag-release.yml`) が次のバージョンのタグ `vX.Y.Z` を付ける
-   - バージョンは最新の `vX.Y.Z` の次のパッチ。`project.yml` の `MARKETING_VERSION` のほうが大きければそれになる。マイナー・メジャーを上げるときは、リリース PR をマージする前に `MARKETING_VERSION` を上げておく (`scripts/next-release-version.sh`)
-   - コミットにすでに `vX.Y.Z` が付いていれば何もしない
-2. Xcode Cloud がタグからビルド → 公証 → GitHub Release へのアップロードまで行う
+1. `MARKETING_VERSION` を最新のリリース (`vX.Y.Z` のタグ) より大きくして `main` にマージする
+2. リリース PR (`main` → `release/production`、[下記](#リリース-pr)) のチェック **Check release version** が通っていることを確かめ、マージする
+   - `MARKETING_VERSION` が最新のリリースより大きくなければ、このチェックが落ちる (`scripts/release-version.sh`)
+3. `release/production` への push で、GitHub Actions (`.github/workflows/tag-release.yml`) が `v<MARKETING_VERSION>` のタグを付ける
+   - 上げ忘れたままマージした場合は、ここでも失敗してタグを付けない。`MARKETING_VERSION` を上げてもう一度リリース PR をマージする
+   - コミットにすでにそのタグが付いていれば何もしない
+4. Xcode Cloud がタグからビルド → 公証 → GitHub Release へのアップロードまで行う
 
 - `ci_scripts/ci_post_clone.sh`: xcodegen で xcodeproj を生成。タグからバージョン (`MARKETING_VERSION`)、`CI_BUILD_NUMBER` からビルド番号を設定
   - Xcode Cloud はパッケージを自動解決しないので、Swift パッケージのバージョンはルートの `Package.resolved` で固定している。`xcodegen generate` のたびに xcodeproj へコピーされる (`project.yml` の `postGenCommand`)
@@ -24,6 +27,10 @@
   git push origin v0.1.0:refs/heads/release/production   # 直近リリースのタグから切る
   ```
 - Settings → Actions → General → Workflow permissions で **Allow GitHub Actions to create and approve pull requests** を有効にする
+
+git-pr-release は `GITHUB_TOKEN` で PR を作るので、作られた直後は Check release version が走らない (`GITHUB_TOKEN` によるイベントはワークフローを起動しない)。`main` に次の push があると走る。すぐに確かめたいときは、リリース PR を Close → Reopen する。
+
+リポジトリを public にしたら、Settings → Rules → Rulesets で `release/production` に **Require status checks to pass** (`release-version`) を設定し、チェックが通らないとマージできないようにする (private のままでは無料プランで使えない)。
 
 ## Web 配布 (GitHub Pages + Sparkle)
 

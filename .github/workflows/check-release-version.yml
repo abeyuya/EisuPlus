@@ -1,0 +1,25 @@
+name: Check release version
+
+# release/production への PR (リリース PR) で、project.yml の MARKETING_VERSION が最新のリリース (vX.Y.Z) より
+# 大きいかを確かめる。上げ忘れたままマージすると、Tag a release も同じ理由で失敗してリリースされない (docs/RELEASE.md)
+on:
+  pull_request:
+    branches:
+      - release/production
+
+permissions:
+  contents: read
+
+jobs:
+  release-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # 最新のリリースと比べるのにすべてのタグが要る
+          fetch-depth: 0
+
+      - name: Check MARKETING_VERSION
+        run: |
+          version="$(scripts/release-version.sh)"
+          echo "::notice::マージすると v$version としてリリースされる"
