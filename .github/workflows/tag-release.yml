@@ -1,0 +1,44 @@
+name: Tag a release
+
+# release/production に push されたら (リリース PR をマージしたら) project.yml の MARKETING_VERSION のタグ (vX.Y.Z) を付ける。
+# Xcode Cloud がタグからビルドし、正式リリースとして GitHub Release にアップロードする (docs/RELEASE.md)
+on:
+  push:
+    branches:
+      - release/production
+
+permissions:
+  contents: write
+
+# 続けて push されても、前のタグを見てから判断する
+concurrency:
+  group: tag-release
+  cancel-in-progress: false
+
+jobs:
+  tag-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # 最新のリリースと比べるのにすべてのタグが要る
+          fetch-depth: 0
+
+      - name: Tag the release
+        run: |
+          # 古い実行を再実行したときに、古いコミットにタグを付けない
+          git fetch --quiet origin release/production
+          if [[ "$(git rev-parse HEAD)" != "$(git rev-parse FETCH_HEAD)" ]]; then
+            echo "::notice::release/production はこのコミットより先に進んでいるので、タグを付けない"
+            exit 0
+          fi
+          # 再実行で二重にタグを付けない
+          if [[ -n "$(git tag --points-at HEAD | { grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' || true; })" ]]; then
+            echo "::notice::このコミットにはすでにバージョンのタグが付いている"
+            exit 0
+          fi
+          # MARKETING_VERSION が最新のリリースより大きくなければ、ここで失敗してリリースしない
+          version="$(scripts/release-version.sh)"
+          git tag "v$version"
+          git push origin "v$version"
+          echo "::notice::v$version を付けた"
