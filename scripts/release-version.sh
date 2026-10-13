@@ -4,7 +4,6 @@
 #
 # - MARKETING_VERSION が最新のリリース (vX.Y.Z のタグ) より大きければ、それを出力する
 # - 大きくなければエラーで終わる。リリース PR をマージする前に MARKETING_VERSION を上げておく
-# - HEAD にすでに vMARKETING_VERSION が付いていれば何も出力しない (再実行で二重にタグを付けない)
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -14,12 +13,9 @@ error() {
   exit 1
 }
 
-version="$(sed -n -E 's/^ *MARKETING_VERSION: "?([0-9]+\.[0-9]+\.[0-9]+)"?$/\1/p' project.yml | head -n 1)"
+# 最初の一致で sed を終わらせる (head に渡すと pipefail の下で SIGPIPE を拾いうる)
+version="$(sed -n -E '/^ *MARKETING_VERSION: "?([0-9]+\.[0-9]+\.[0-9]+)"?$/{s//\1/p;q;}' project.yml)"
 [[ -n "$version" ]] || error "project.yml に X.Y.Z 形式の MARKETING_VERSION がない"
-
-if [[ -n "$(git tag --points-at HEAD | { grep -Fx "v$version" || true; })" ]]; then
-  exit 0
-fi
 
 latest="$(git tag --list 'v*' | { grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' || true; } | sort -V | tail -n 1)"
 if [[ -n "$latest" ]]; then

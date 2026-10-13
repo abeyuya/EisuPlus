@@ -32,12 +32,13 @@ jobs:
             echo "::notice::release/production はこのコミットより先に進んでいるので、タグを付けない"
             exit 0
           fi
-          # MARKETING_VERSION が最新のリリースより大きくなければ、ここで失敗してリリースしない
-          version="$(scripts/release-version.sh)"
-          if [[ -z "$version" ]]; then
+          # 再実行で二重にタグを付けない
+          if [[ -n "$(git tag --points-at HEAD | { grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' || true; })" ]]; then
             echo "::notice::このコミットにはすでにバージョンのタグが付いている"
             exit 0
           fi
+          # MARKETING_VERSION が最新のリリースより大きくなければ、ここで失敗してリリースしない
+          version="$(scripts/release-version.sh)"
           git tag "v$version"
           git push origin "v$version"
           echo "::notice::v$version を付けた"

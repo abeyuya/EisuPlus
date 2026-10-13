@@ -10,6 +10,8 @@
    - コミットにすでにそのタグが付いていれば何もしない
 4. Xcode Cloud がタグからビルド → 公証 → GitHub Release へのアップロードまで行う
 
+旧系統への hotfix (`v0.2.0` の後の `v0.1.1` など) はこの手順では出せない (`MARKETING_VERSION` が最新のリリースより大きくないので落ちる)。Sparkle で利用者は最新の系統に上がるので、修正は `MARKETING_VERSION` を上げて最新の系統で出す。
+
 - `ci_scripts/ci_post_clone.sh`: xcodegen で xcodeproj を生成。タグからバージョン (`MARKETING_VERSION`)、`CI_BUILD_NUMBER` からビルド番号を設定
   - Xcode Cloud はパッケージを自動解決しないので、Swift パッケージのバージョンはルートの `Package.resolved` で固定している。`xcodegen generate` のたびに xcodeproj へコピーされる (`project.yml` の `postGenCommand`)
 - `ci_scripts/ci_post_xcodebuild.sh`: Developer ID 署名済みアプリを notarytool で公証・staple し、`EisuPlus-<version>.zip` を GitHub Release にアップロード。正式リリースなら最後に GitHub Actions の Deploy site を起動する（[Web 配布](#web-配布-github-pages--sparkle)）
@@ -43,7 +45,7 @@ git-pr-release は `GITHUB_TOKEN` で PR を作るので、作られた直後は
   - 起動するのは、`site/` などを変えて `main` に push したとき、Xcode Cloud が正式リリースの zip をアップロードし終えたとき (`repository_dispatch`)、手動で実行したとき
 - アプリは Sparkle (`EisuMod/App/Updater.swift`) で `appcast.xml` を確認し、新しいバージョンがあればアップデートする。比べるのはビルド番号 (`CFBundleVersion`)
   - 同じタグで Rebuild すると、ビルド番号だけが上がるので、そのバージョンを使っている人にも同じバージョンへの更新が届く。zip が置き換わる以上 appcast の署名も作り直す必要があるので、これは避けられない。修正を出すときはバージョンを上げる
-  - appcast に載せるのは、GitHub の latest ではなく、バージョン (`vX.Y.Z` のタグ) が最大の正式リリース。旧系統の hotfix を出しても、新しい系統の利用者に古いバージョンが配られることはない
+  - appcast に載せるのは、GitHub の latest ではなく、バージョン (`vX.Y.Z` のタグ) が最大の正式リリース。手でタグを付けて旧系統の hotfix を出しても、新しい系統の利用者に古いバージョンが配られることはない
 
 ### 初期設定 (初回のみ)
 

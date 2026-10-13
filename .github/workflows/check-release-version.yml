@@ -4,6 +4,8 @@ name: Check release version
 # 大きいかを確かめる。上げ忘れたままマージすると、Tag a release も同じ理由で失敗してリリースされない (docs/RELEASE.md)
 on:
   pull_request:
+    # edited: 別の base で作った PR を release/production に向け直したときも確かめる
+    types: [opened, synchronize, reopened, edited]
     branches:
       - release/production
 
