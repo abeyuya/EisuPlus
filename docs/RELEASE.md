@@ -8,7 +8,8 @@
 3. `release/production` への push で、GitHub Actions (`.github/workflows/tag-release.yml`) が `v<MARKETING_VERSION>` のタグを付ける
    - 上げ忘れたままマージした場合は、ここでも失敗してタグを付けない。`MARKETING_VERSION` を上げてもう一度リリース PR をマージする
    - コミットにすでにそのタグが付いていれば何もしない
-4. Xcode Cloud がタグからビルド → 公証 → GitHub Release へのアップロードまで行う
+4. 同じ push で Xcode Cloud が `release/production` をビルド → 公証 → `v<MARKETING_VERSION>` の正式リリース (latest) として GitHub Release へアップロードまで行う
+   - アップロードの直前に、`v<MARKETING_VERSION>` のタグがビルドしたコミットに付いているかを確かめる。付いていなければ (上げ忘れ、Tag a release の失敗や遅れ) 正式リリースにせず、下記の prerelease にする。タグが付いてから Xcode Cloud で Rebuild すれば正式リリースになる
 
 旧系統への hotfix (`v0.2.0` の後の `v0.1.1` など) はこの手順では出せない (`MARKETING_VERSION` が最新のリリースより大きくないので落ちる)。Sparkle で利用者は最新の系統に上がるので、修正は `MARKETING_VERSION` を上げて最新の系統で出す。
 
@@ -16,7 +17,7 @@
   - Xcode Cloud はパッケージを自動解決しないので、Swift パッケージのバージョンはルートの `Package.resolved` で固定している。`xcodegen generate` のたびに xcodeproj へコピーされる (`project.yml` の `postGenCommand`)
 - `ci_scripts/ci_post_xcodebuild.sh`: Developer ID 署名済みアプリを notarytool で公証・staple し、`EisuPlus-<version>.zip` を GitHub Release にアップロード。正式リリースなら最後に GitHub Actions の Deploy site を起動する（[Web 配布](#web-配布-github-pages--sparkle)）
 
-タグ以外 (ブランチ / PR) で起動された Archive は、`build-<ビルド番号>` タグの **prerelease** として `EisuPlus-<version>-build<ビルド番号>.zip` をアップロードする。prerelease は `install-latest.sh` の「最新リリース」には含まれない。
+それ以外 (`release/production` 以外のブランチ / PR) で起動された Archive は、`build-<ビルド番号>` タグの **prerelease** として `EisuPlus-<version>-build<ビルド番号>.zip` をアップロードする。prerelease は `install-latest.sh` の「最新リリース」には含まれない。
 
 ## リリース PR
 
@@ -92,8 +93,8 @@ private リポジトリなので `gh auth login` 済みであること。
 1. `xcodegen generate` して `EisuMod.xcodeproj` を Xcode で開く
 2. Integrate → Create Workflow… (GitHub 連携と App Store Connect のアプリ登録を求められたら従う)
 3. ワークフローを編集
-   - Start Conditions: **Tag Changes** を追加 (Custom Tags: `v` で始まるもの)。ブランチ起動のビルドも prerelease として欲しければ Branch Changes も残す
-     - Branch Changes に `release/production` を含めない。含めると、リリースのたびにタグからの正式リリースと同じコミットの prerelease が二重にビルドされる
+   - Start Conditions: **Branch Changes** に `release/production` を含める (正式リリースはこのビルドから作る)。ほかのブランチのビルドも prerelease として欲しければ足す
+     - **Tag Changes** は追加しない。追加すると Tag a release が付けたタグでもう一度ビルドされ、同じリリースの zip がビルド番号違いのもので置き換わる
    - Actions: **Archive** (Platform: macOS, Scheme: EisuMod)
    - Environment → Environment Variables に以下を追加し、すべて **Secret** にチェック
 

@@ -74,15 +74,30 @@ if [[ "$notarize_status" != "Accepted" ]]; then
 fi
 xcrun stapler staple "$app_path"
 
-# タグ起動なら正式リリース、それ以外 (ブランチ / PR 起動) はビルド番号付きの prerelease にする
+# 正式リリースにするのは、タグ起動のときと、release/production のコミットにそのバージョンのタグが付いているとき。
+# それ以外 (ブランチ / PR 起動) はビルド番号付きの prerelease にする
 # prerelease のタグは `v` で始めない (Tag Changes の起動条件に引っかかって再ビルドされるのを防ぐ)
+version="$(defaults read "$app_path/Contents/Info.plist" CFBundleShortVersionString)"
+release_tag=""
 if [[ -n "${CI_TAG:-}" ]]; then
   release_tag="$CI_TAG"
-  release_name="$CI_TAG"
+elif [[ "${CI_BRANCH:-}" == "release/production" ]]; then
+  # release/production への push で GitHub Actions (.github/workflows/tag-release.yml) が v<MARKETING_VERSION> のタグを付ける。
+  # MARKETING_VERSION の上げ忘れなどでこのコミットに付いていなければ、既存の正式リリースを置き換えないよう prerelease にする
+  tag_commit="$(curl -sS --fail -H "Authorization: Bearer $GITHUB_RELEASE_TOKEN" \
+    -H "Accept: application/vnd.github.sha" -H "X-GitHub-Api-Version: 2022-11-28" \
+    "https://api.github.com/repos/$GITHUB_REPO/commits/tags/v$version")" || tag_commit=""
+  if [[ "$tag_commit" == "${CI_COMMIT:?CI_COMMIT がない}" ]]; then
+    release_tag="v$version"
+  else
+    echo "warning: v$version のタグがこのコミットに付いていないので prerelease にする。Actions の Tag a release を確かめ、タグが付いたら Rebuild する" >&2
+  fi
+fi
+if [[ -n "$release_tag" ]]; then
+  release_name="$release_tag"
   prerelease=false
-  asset_name="EisuPlus-${CI_TAG#v}.zip"
+  asset_name="EisuPlus-${release_tag#v}.zip"
 else
-  version="$(defaults read "$app_path/Contents/Info.plist" CFBundleShortVersionString)"
   build_number="${CI_BUILD_NUMBER:?CI_BUILD_NUMBER がない}"
   source_ref="${CI_BRANCH:-${CI_PULL_REQUEST_SOURCE_BRANCH:-unknown}}"
   source_ref="${source_ref//[\"\\]/}"  # JSON に埋め込むので " と \ を除く
