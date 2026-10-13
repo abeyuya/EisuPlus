@@ -9,7 +9,9 @@ options:
 settings:
   base:
     SWIFT_VERSION: "6.0"
-    MARKETING_VERSION: "0.1.0"
+    # リリースするバージョン。リリース PR を release/production にマージする前に、最新のリリース (vX.Y.Z) より大きくしておく
+    # マージすると、このバージョンのタグが付いて正式リリースされる (scripts/release-version.sh)
+    MARKETING_VERSION: "0.2.0"
     CURRENT_PROJECT_VERSION: "1"
     DEVELOPMENT_TEAM: 37XL3EDJ44
     PRODUCT_NAME: EisuPlus
