@@ -9,15 +9,15 @@
    - 上げ忘れたままマージした場合は、ここでも失敗してタグを付けない。`MARKETING_VERSION` を上げてもう一度リリース PR をマージする
    - コミットにすでにそのタグが付いていれば何もしない
 4. 同じ push で Xcode Cloud が `release/production` をビルド → 公証 → `v<MARKETING_VERSION>` の正式リリース (latest) として GitHub Release へアップロードまで行う
-   - アップロードの直前に、`v<MARKETING_VERSION>` のタグがビルドしたコミットに付いているかを確かめる。付いていなければ (上げ忘れ、Tag a release の失敗や遅れ) 正式リリースにせず、下記の prerelease にする。タグが付いてから Xcode Cloud で Rebuild すれば正式リリースになる
+   - アップロードの直前に、`v<MARKETING_VERSION>` のタグがビルドしたコミットに付いているかを確かめる。タグがまだなければ最大 5 分ほど待つ。別のコミットに付いている (上げ忘れ) か、待っても付かなければ (Tag a release の失敗) 正式リリースにせず、下記の prerelease にする。タグが付いてから Xcode Cloud で Rebuild すれば正式リリースになる
 
 旧系統への hotfix (`v0.2.0` の後の `v0.1.1` など) はこの手順では出せない (`MARKETING_VERSION` が最新のリリースより大きくないので落ちる)。Sparkle で利用者は最新の系統に上がるので、修正は `MARKETING_VERSION` を上げて最新の系統で出す。
 
-- `ci_scripts/ci_post_clone.sh`: xcodegen で xcodeproj を生成。タグからバージョン (`MARKETING_VERSION`)、`CI_BUILD_NUMBER` からビルド番号を設定
+- `ci_scripts/ci_post_clone.sh`: xcodegen で xcodeproj を生成。タグ起動ならタグからバージョン (`MARKETING_VERSION`) を、`CI_BUILD_NUMBER` からビルド番号を設定 (ブランチ起動では `project.yml` の `MARKETING_VERSION` のまま)
   - Xcode Cloud はパッケージを自動解決しないので、Swift パッケージのバージョンはルートの `Package.resolved` で固定している。`xcodegen generate` のたびに xcodeproj へコピーされる (`project.yml` の `postGenCommand`)
 - `ci_scripts/ci_post_xcodebuild.sh`: Developer ID 署名済みアプリを notarytool で公証・staple し、`EisuPlus-<version>.zip` を GitHub Release にアップロード。正式リリースなら最後に GitHub Actions の Deploy site を起動する（[Web 配布](#web-配布-github-pages--sparkle)）
 
-それ以外 (`release/production` 以外のブランチ / PR) で起動された Archive は、`build-<ビルド番号>` タグの **prerelease** として `EisuPlus-<version>-build<ビルド番号>.zip` をアップロードする。prerelease は `install-latest.sh` の「最新リリース」には含まれない。
+それ以外 (ほかのブランチ / PR、タグが付いていない `release/production`) で起動された Archive は、`build-<ビルド番号>` タグの **prerelease** として `EisuPlus-<version>-build<ビルド番号>.zip` をアップロードする。prerelease は `install-latest.sh` の「最新リリース」には含まれない。
 
 ## リリース PR
 

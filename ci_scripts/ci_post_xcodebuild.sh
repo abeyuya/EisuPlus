@@ -74,19 +74,33 @@ if [[ "$notarize_status" != "Accepted" ]]; then
 fi
 xcrun stapler staple "$app_path"
 
-# 正式リリースにするのは、タグ起動のときと、release/production のコミットにそのバージョンのタグが付いているとき。
-# それ以外 (ブランチ / PR 起動) はビルド番号付きの prerelease にする
+# GitHub API の共通ヘッダ (Accept は呼び出しごとに足す)
+github_headers=(
+  -H "Authorization: Bearer $GITHUB_RELEASE_TOKEN"
+  -H "X-GitHub-Api-Version: 2022-11-28"
+)
+api_headers=("${github_headers[@]}" -H "Accept: application/vnd.github+json")
+
+# 正式リリースにするのは、タグ起動のときと、release/production への push で起動されてそのコミットにバージョンのタグが付いているとき。
+# それ以外 (ほかのブランチ / PR 起動) はビルド番号付きの prerelease にする
 # prerelease のタグは `v` で始めない (Tag Changes の起動条件に引っかかって再ビルドされるのを防ぐ)
 version="$(defaults read "$app_path/Contents/Info.plist" CFBundleShortVersionString)"
 release_tag=""
 if [[ -n "${CI_TAG:-}" ]]; then
   release_tag="$CI_TAG"
-elif [[ "${CI_BRANCH:-}" == "release/production" ]]; then
+elif [[ "${CI_BRANCH:-}" == "release/production" && -z "${CI_PULL_REQUEST_NUMBER:-}" ]]; then
   # release/production への push で GitHub Actions (.github/workflows/tag-release.yml) が v<MARKETING_VERSION> のタグを付ける。
+  # タグ付けの遅れや API の一時的な失敗で取りこぼさないよう、タグが見つかるまで少し待つ
+  tag_commit=""
+  for (( attempt = 1; attempt <= 10; attempt++ )); do
+    tag_commit="$(curl -sS --fail "${github_headers[@]}" -H "Accept: application/vnd.github.sha" \
+      "https://api.github.com/repos/$GITHUB_REPO/commits/tags/v$version")" && break
+    tag_commit=""
+    if (( attempt < 10 )); then
+      sleep 30
+    fi
+  done
   # MARKETING_VERSION の上げ忘れなどでこのコミットに付いていなければ、既存の正式リリースを置き換えないよう prerelease にする
-  tag_commit="$(curl -sS --fail -H "Authorization: Bearer $GITHUB_RELEASE_TOKEN" \
-    -H "Accept: application/vnd.github.sha" -H "X-GitHub-Api-Version: 2022-11-28" \
-    "https://api.github.com/repos/$GITHUB_REPO/commits/tags/v$version")" || tag_commit=""
   if [[ "$tag_commit" == "${CI_COMMIT:?CI_COMMIT がない}" ]]; then
     release_tag="v$version"
   else
@@ -110,11 +124,6 @@ asset_path="$work_dir/$asset_name"
 ditto -c -k --keepParent "$app_path" "$asset_path"
 
 # GitHub Release を作成してアップロード
-api_headers=(
-  -H "Authorization: Bearer $GITHUB_RELEASE_TOKEN"
-  -H "Accept: application/vnd.github+json"
-  -H "X-GitHub-Api-Version: 2022-11-28"
-)
 # Rebuild 時などに備え、同じタグの Release があれば再利用し、同名の asset は置き換える
 if release="$(curl -sS --fail "${api_headers[@]}" \
   "https://api.github.com/repos/$GITHUB_REPO/releases/tags/$release_tag")"; then
