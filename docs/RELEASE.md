@@ -9,7 +9,7 @@
    - 上げ忘れたままマージした場合は、ここでも失敗してタグを付けない。`MARKETING_VERSION` を上げてもう一度リリース PR をマージする
    - コミットにすでにそのタグが付いていれば何もしない
 4. 同じ push で Xcode Cloud が `release/production` をビルド → 公証 → `v<MARKETING_VERSION>` の正式リリース (latest) として GitHub Release へアップロードまで行う
-   - アップロードの直前に、`v<MARKETING_VERSION>` のタグがビルドしたコミットに付いているかを確かめる。タグがまだなければ最大 5 分ほど待つ。別のコミットに付いている (上げ忘れ) か、待っても付かなければ (Tag a release の失敗) 正式リリースにせず、下記の prerelease にする。タグが付いてから Xcode Cloud で Rebuild すれば正式リリースになる
+   - アップロードの直前に、`v<MARKETING_VERSION>` のタグがビルドしたコミットに付いているかを確かめる。タグがまだなければ最大 5 分ほど待つ。別のコミットに付いている (上げ忘れ) か、待っても付かなければ (Tag a release の失敗) 正式リリースにせず、下記の prerelease にする。後者はタグが付いてから Xcode Cloud で Rebuild すれば正式リリースになる
 
 旧系統への hotfix (`v0.2.0` の後の `v0.1.1` など) はこの手順では出せない (`MARKETING_VERSION` が最新のリリースより大きくないので落ちる)。Sparkle で利用者は最新の系統に上がるので、修正は `MARKETING_VERSION` を上げて最新の系統で出す。
 
@@ -45,8 +45,8 @@ git-pr-release は `GITHUB_TOKEN` で PR を作るので、作られた直後は
   - 最新 (バージョンが最大) の正式リリースの zip に Sparkle の EdDSA 署名を付け、`appcast.xml` を書き出す。ダウンロードボタンもその zip に向ける
   - 起動するのは、`site/` などを変えて `main` に push したとき、Xcode Cloud が正式リリースの zip をアップロードし終えたとき (`repository_dispatch`)、手動で実行したとき
 - アプリは Sparkle (`EisuMod/App/Updater.swift`) で `appcast.xml` を確認し、新しいバージョンがあればアップデートする。比べるのはビルド番号 (`CFBundleVersion`)
-  - 同じタグで Rebuild すると、ビルド番号だけが上がるので、そのバージョンを使っている人にも同じバージョンへの更新が届く。zip が置き換わる以上 appcast の署名も作り直す必要があるので、これは避けられない。修正を出すときはバージョンを上げる
-  - appcast に載せるのは、GitHub の latest ではなく、バージョン (`vX.Y.Z` のタグ) が最大の正式リリース。手でタグを付けて旧系統の hotfix を出しても、新しい系統の利用者に古いバージョンが配られることはない
+  - 正式リリースのビルドを Rebuild すると、ビルド番号だけが上がるので、そのバージョンを使っている人にも同じバージョンへの更新が届く。zip が置き換わる以上 appcast の署名も作り直す必要があるので、これは避けられない。修正を出すときはバージョンを上げる
+  - appcast に載せるのは、GitHub の latest ではなく、バージョン (`vX.Y.Z` のタグ) が最大の正式リリース。旧系統の hotfix の正式リリースを後から作っても、新しい系統の利用者に古いバージョンが配られることはない
 
 ### 初期設定 (初回のみ)
 

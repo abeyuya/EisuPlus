@@ -81,30 +81,27 @@ github_headers=(
 )
 api_headers=("${github_headers[@]}" -H "Accept: application/vnd.github+json")
 
-# 正式リリースにするのは、タグ起動のときと、release/production への push で起動されてそのコミットにバージョンのタグが付いているとき。
-# それ以外 (ほかのブランチ / PR 起動) はビルド番号付きの prerelease にする
-# prerelease のタグは `v` で始めない (Tag Changes の起動条件に引っかかって再ビルドされるのを防ぐ)
+# 正式リリースにするのは、release/production への push で起動され、そのコミットにバージョンのタグが付いているとき
+# (手で Start Build したタグ起動のビルドも正式リリースにする)。それ以外 (ほかのブランチ / PR 起動) はビルド番号付きの prerelease にする
+# prerelease のタグは `v` で始めない (Tag Changes を足したときに、その起動条件に引っかかって再ビルドされないように)
 version="$(defaults read "$app_path/Contents/Info.plist" CFBundleShortVersionString)"
 release_tag=""
 if [[ -n "${CI_TAG:-}" ]]; then
   release_tag="$CI_TAG"
 elif [[ "${CI_BRANCH:-}" == "release/production" && -z "${CI_PULL_REQUEST_NUMBER:-}" ]]; then
+  commit="${CI_COMMIT:?CI_COMMIT がない}"
   # release/production への push で GitHub Actions (.github/workflows/tag-release.yml) が v<MARKETING_VERSION> のタグを付ける。
-  # タグ付けの遅れや API の一時的な失敗で取りこぼさないよう、タグが見つかるまで少し待つ
-  tag_commit=""
-  for (( attempt = 1; attempt <= 10; attempt++ )); do
-    tag_commit="$(curl -sS --fail "${github_headers[@]}" -H "Accept: application/vnd.github.sha" \
-      "https://api.github.com/repos/$GITHUB_REPO/commits/tags/v$version")" && break
-    tag_commit=""
-    if (( attempt < 10 )); then
-      sleep 30
-    fi
-  done
-  # MARKETING_VERSION の上げ忘れなどでこのコミットに付いていなければ、既存の正式リリースを置き換えないよう prerelease にする
-  if [[ "$tag_commit" == "${CI_COMMIT:?CI_COMMIT がない}" ]]; then
+  # タグ付けの遅れや API の一時的な失敗で取りこぼさないよう、タグが見つかるまで 30 秒おきに 5 分ほど待つ
+  tag_commit="$(curl -sS --fail --max-time 30 --retry 9 --retry-delay 30 --retry-all-errors \
+    "${github_headers[@]}" -H "Accept: application/vnd.github.sha" \
+    "https://api.github.com/repos/$GITHUB_REPO/commits/tags/v$version")" || tag_commit=""
+  # このコミットに付いていなければ、既存の正式リリースを置き換えないよう prerelease にする
+  if [[ "$tag_commit" == "$commit" ]]; then
     release_tag="v$version"
+  elif [[ -n "$tag_commit" ]]; then
+    echo "warning: v$version は別のコミット ($tag_commit) に付いているので prerelease にする。MARKETING_VERSION を上げてリリース PR をマージし直す" >&2
   else
-    echo "warning: v$version のタグがこのコミットに付いていないので prerelease にする。Actions の Tag a release を確かめ、タグが付いたら Rebuild する" >&2
+    echo "warning: v$version のタグが見つからないので prerelease にする。Actions の Tag a release を確かめ、タグが付いたら Rebuild する" >&2
   fi
 fi
 if [[ -n "$release_tag" ]]; then
