@@ -1,4 +1,6 @@
-# <img src="site/icon.png" alt="" width="40" align="center"> EisuPlus
+<img src="site/icon.png" alt="EisuPlus のアイコン" width="96">
+
+# EisuPlus
 
 ⌘キーで英数・かなを切り替え、修飾キーとマウスだけでウィンドウを動かす。メニューバーに常駐する小さな macOS アプリです。
 
@@ -17,16 +19,19 @@
 
 ## ソースからビルドする
 
-[XcodeGen](https://github.com/yonaskolb/XcodeGen) で `EisuMod.xcodeproj` を生成します。
+[XcodeGen](https://github.com/yonaskolb/XcodeGen) で `project.yml` から `EisuMod.xcodeproj` を生成します。
 
-```sh
-brew install xcodegen
-xcodegen generate
-open EisuMod.xcodeproj
-```
+1. `project.yml` の署名のチーム (`DEVELOPMENT_TEAM`) とバンドル ID (`PRODUCT_BUNDLE_IDENTIFIER`) は作者のものなので、自分のものに変える
+   - xcodeproj は生成のたびに作り直されるので、Xcode の Signing で変えても次の生成で元に戻る
+   - アクセシビリティの許可は署名に結びつくため、ad-hoc 署名だとビルドのたびに許可し直しになる
+2. 生成して開く
+   ```sh
+   brew install xcodegen
+   xcodegen generate
+   open EisuMod.xcodeproj
+   ```
 
-- アプリ名は EisuPlus ですが、ターゲット・スキーム・バンドル ID (`com.github.abeyuya.EisuMod`) は旧名の EisuMod のままです
-- 署名のチーム (`project.yml` の `DEVELOPMENT_TEAM`) は作者のものなので、自分のチームに変えてください。アクセシビリティの許可は署名に結びつくため、ad-hoc 署名だとビルドのたびに許可し直しになります
+- アプリ名は EisuPlus ですが、ターゲット・スキーム・バンドル ID は旧名の EisuMod のままです
 - `scripts/install.sh` は、作者の Developer ID 証明書で署名して `/Applications` に入れるスクリプトです
 
 設計は [docs/PLAN.md](docs/PLAN.md)、リリースと配布の仕組みは [docs/RELEASE.md](docs/RELEASE.md) にあります。
