@@ -1,7 +1,7 @@
 name: Tag a release
 
 # release/production に push されたら (リリース PR をマージしたら) project.yml の MARKETING_VERSION のタグ (vX.Y.Z) を付ける。
-# Xcode Cloud がタグからビルドし、正式リリースとして GitHub Release にアップロードする (docs/RELEASE.md)
+# Xcode Cloud は同じ push で release/production をビルドし、このタグが付いていれば正式リリースとして GitHub Release にアップロードする (docs/RELEASE.md)
 on:
   push:
     branches:
