@@ -168,8 +168,18 @@ section h2 {
 
 .features {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  /* 動きの GIF が見えるよう、広い画面でも 2 列にとどめる */
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
   gap: 16px;
+}
+
+.feature .demo {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
 }
 
 .feature {
