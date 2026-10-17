@@ -17,12 +17,12 @@
 
 <table>
   <tr>
-    <td><img src="site/demo/input.gif" width="360" alt="左の⌘を押して離すと英数に、右の⌘を押して離すとかなに切り替わる"><br>⌘の単押しで英数・かな</td>
-    <td><img src="site/demo/move.gif" width="360" alt="control キーを押したままマウスを動かすと、ウィンドウがついてくる"><br>⌃ + マウス移動でウィンドウを移動</td>
+    <td><picture><source media="(prefers-color-scheme: dark)" srcset="site/demo/input-dark.gif"><img src="site/demo/input.gif" width="360" alt="左の⌘を押して離すと英数に、右の⌘を押して離すとかなに切り替わる"></picture><br>⌘の単押しで英数・かな</td>
+    <td><picture><source media="(prefers-color-scheme: dark)" srcset="site/demo/move-dark.gif"><img src="site/demo/move.gif" width="360" alt="control キーを押したままマウスを動かすと、ウィンドウがついてくる"></picture><br>⌃ + マウス移動でウィンドウを移動</td>
   </tr>
   <tr>
-    <td><img src="site/demo/resize.gif" width="360" alt="option キーを押したままマウスを動かすと、ウィンドウの右下の角が動く"><br>⌥ + マウス移動でリサイズ</td>
-    <td><img src="site/demo/snap.gif" width="360" alt="移動中に左端へ運ぶと左半分、上端へ運ぶと最大化する"><br>画面の端にスナップ</td>
+    <td><picture><source media="(prefers-color-scheme: dark)" srcset="site/demo/resize-dark.gif"><img src="site/demo/resize.gif" width="360" alt="option キーを押したままマウスを動かすと、ウィンドウの右下の角が動く"></picture><br>⌥ + マウス移動でリサイズ</td>
+    <td><picture><source media="(prefers-color-scheme: dark)" srcset="site/demo/snap-dark.gif"><img src="site/demo/snap.gif" width="360" alt="移動中に左端へ運ぶと左半分、上端へ運ぶと最大化する"></picture><br>画面の端にスナップ</td>
   </tr>
 </table>
 
