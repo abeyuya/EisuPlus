@@ -64,12 +64,12 @@ git-pr-release は `GITHUB_TOKEN` で PR を作るので、作られた直後は
    ```
    - **秘密鍵をなくすと、配布済みのアプリにアップデートを届けられなくなる**。キーチェーンの「ed25519」(Private key for signing Sparkle updates) をパスワードマネージャなどにも控えておく
 4. リポジトリの Settings → Pages → Build and deployment → Source を **GitHub Actions** にする
-   - リポジトリは public にしておく。private だと無料プランでは Pages を使えず、Release の zip も他の人がダウンロードできない (アプリの「アップデートを確認…」が appcast.xml の 404 でエラーになる)
+   - リポジトリは public にしておく。private だと無料プランでは Pages を使えず (appcast.xml が 404 になり、アプリの「アップデートを確認…」がエラーになる)、Release の zip も他の人がダウンロードできない
 5. Xcode Cloud の `GITHUB_RELEASE_TOKEN` は Contents: Read and write があれば `repository_dispatch` も送れるので、追加の設定はいらない
 
 ## 他の Mac へのインストール
 
-配布サイトから zip をダウンロードしてもよい。スクリプトで入れる場合は、`gh` でリリースを取得するので `gh auth login` 済みであること。
+配布サイト (https://abeyuya.github.io/EisuPlus/) から zip をダウンロードしてもよい。スクリプトで入れる場合は、`gh` でリリースを取得するので `gh auth login` 済みであること。
 
 ```sh
 ./scripts/install-latest.sh          # 最新リリース
