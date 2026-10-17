@@ -11,7 +11,7 @@
 
 既定のキーや挙動を変えたら作り直す。
 
-使い方 (Pillow が必要):
+使い方 (macOS のシステムフォントを使うので macOS で実行する。Pillow が必要):
     python3 -m venv /tmp/demo-venv && /tmp/demo-venv/bin/pip install pillow
     /tmp/demo-venv/bin/python scripts/generate-demo-gifs.py site/demo
 
@@ -160,6 +160,10 @@ class Gesture:
             return
 
         if self.grab is None:
+            # つかむのはカーソルの下のウィンドウだけ (WindowLocator)
+            x, y, w, h = self.frame
+            if not (x <= mouse[0] < x + w and y <= mouse[1] < y + h):
+                return
             if self.mode == "move" and self.snapped:
                 snapped_frame, size = self.snapped
                 self.snapped = None
@@ -402,7 +406,7 @@ def demo_input():
             end = cx + text_font.getlength(composing)
             d.line([(cx, px(y + 5)), (end, px(y + 5))], fill=TEXT, width=px(1.5))
             cx = end
-        if (t - last) < 0.5 or int((t - last) / 0.5) % 2 == 1:
+        if int((t - last) / 0.5) % 2 == 0:
             d.rectangle([cx + px(1), px(y - 22), cx + px(3) - 1, px(y + 5)], fill=TEXT)
         if switched_at is not None and t - switched_at < 0.9:
             # 切り替えたときに macOS がカーソルの近くに出す入力モードの表示
