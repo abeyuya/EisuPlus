@@ -33,7 +33,7 @@
 
 git-pr-release は `GITHUB_TOKEN` で PR を作るので、作られた直後は Check release version が走らない (`GITHUB_TOKEN` によるイベントはワークフローを起動しない)。`main` に次の push があると走る。すぐに確かめたいときは、リリース PR を Close → Reopen する。
 
-リポジトリを public にしたら、Settings → Rules → Rulesets で `release/production` に **Require status checks to pass** (`release-version`) を設定し、チェックが通らないとマージできないようにする (private のままでは無料プランで使えない)。
+`release/production` には、Settings → Rules → Rulesets の「release/production: release-version」で **Require status checks to pass** (`release-version`) を設定してあり、チェックが通らないとマージできない。緊急時のため、リポジトリの管理者は迂回できる。ruleset は private リポジトリだと無料プランでは使えないので、リポジトリが public であることが前提。
 
 ## Web 配布 (GitHub Pages + Sparkle)
 
@@ -64,12 +64,12 @@ git-pr-release は `GITHUB_TOKEN` で PR を作るので、作られた直後は
    ```
    - **秘密鍵をなくすと、配布済みのアプリにアップデートを届けられなくなる**。キーチェーンの「ed25519」(Private key for signing Sparkle updates) をパスワードマネージャなどにも控えておく
 4. リポジトリの Settings → Pages → Build and deployment → Source を **GitHub Actions** にする
-   - private リポジトリで Pages を使うには有料プランが必要。また、private のままだと Release の zip を他の人がダウンロードできない。**公開はリポジトリを public にしてから**
+   - リポジトリは public にしておく。private だと無料プランでは Pages を使えず、Release の zip も他の人がダウンロードできない (アプリの「アップデートを確認…」が appcast.xml の 404 でエラーになる)
 5. Xcode Cloud の `GITHUB_RELEASE_TOKEN` は Contents: Read and write があれば `repository_dispatch` も送れるので、追加の設定はいらない
 
 ## 他の Mac へのインストール
 
-private リポジトリなので `gh auth login` 済みであること。
+配布サイトから zip をダウンロードしてもよい。スクリプトで入れる場合は、`gh` でリリースを取得するので `gh auth login` 済みであること。
 
 ```sh
 ./scripts/install-latest.sh          # 最新リリース

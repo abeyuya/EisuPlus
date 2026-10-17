@@ -1,6 +1,6 @@
 #!/bin/zsh
 # GitHub Release の最新版をダウンロードして /Applications/EisuPlus.app に配置し、起動し直す
-# 事前に `gh auth login` が必要 (private リポジトリのため)
+# 事前に `gh auth login` が必要 (gh でリリースを取得するため)
 set -euo pipefail
 
 repo="abeyuya/EisuPlus"
