@@ -58,7 +58,9 @@ class Theme:
     line: tuple  # 文書の行の代わりの棒
     text: tuple
     muted: tuple
-    on_text: tuple  # text の色で塗った上に載せる文字 (入力モードの表示)
+    on_text: tuple  # text の色で塗った上に載せる文字 (メニューバーの入力ソース)
+    bubble: tuple  # 切り替えたときにカーソルの近くに出る入力モードの表示
+    on_bubble: tuple
     accent: tuple
     accent_dark: tuple  # 押しているキーの縁と側面
     on_accent: tuple  # 押しているキーの文字
@@ -76,7 +78,7 @@ LIGHT = Theme(
     suffix="",
     wallpaper=(226, 233, 249), menu_bg=(247, 248, 251), menu_text=(110, 121, 138), menu_item=(203, 209, 220),
     window_bg=(255, 255, 255), title_bg=(241, 243, 247), window_border=(208, 214, 224), line=(226, 230, 238),
-    text=(30, 42, 59), muted=(91, 103, 121), on_text=(255, 255, 255),
+    text=(30, 42, 59), muted=(91, 103, 121), on_text=(255, 255, 255), bubble=(30, 42, 59), on_bubble=(255, 255, 255),
     accent=(47, 107, 255), accent_dark=(29, 84, 222), on_accent=(255, 255, 255),
     key_bg=(244, 246, 250), key_border=(201, 208, 220), key_shadow=(142, 155, 176),
     shadow=(30, 42, 59), shadow_alpha=64,
@@ -85,7 +87,7 @@ DARK = Theme(
     suffix="-dark",
     wallpaper=(27, 38, 58), menu_bg=(30, 41, 60), menu_text=(170, 180, 196), menu_item=(74, 88, 112),
     window_bg=(36, 47, 66), title_bg=(44, 56, 77), window_border=(60, 74, 98), line=(55, 68, 92),
-    text=(231, 235, 242), muted=(154, 166, 184), on_text=(15, 22, 34),
+    text=(231, 235, 242), muted=(154, 166, 184), on_text=(15, 22, 34), bubble=(70, 84, 108), on_bubble=(231, 235, 242),
     accent=(91, 140, 255), accent_dark=(64, 112, 232), on_accent=(15, 22, 34),
     key_bg=(34, 46, 64), key_border=(58, 72, 96), key_shadow=(10, 15, 23),
     shadow=(0, 0, 0), shadow_alpha=150,
@@ -452,9 +454,9 @@ def demo_input(theme):
             alpha = min(1.0, (0.9 - (t - switched_at)) / 0.2)
             bubble = Image.new("RGBA", (px(34), px(30)), (0, 0, 0, 0))
             bd = ImageDraw.Draw(bubble)
-            bd.rounded_rectangle(box(0, 0, 34, 30), radius=px(8), fill=theme.text + (round(235 * alpha),))
+            bd.rounded_rectangle(box(0, 0, 34, 30), radius=px(8), fill=theme.bubble + (round(235 * alpha),))
             bd.text(
-                (px(17), px(15)), mode, font=bubble_font, fill=theme.on_text + (round(255 * alpha),), anchor="mm"
+                (px(17), px(15)), mode, font=bubble_font, fill=theme.on_bubble + (round(255 * alpha),), anchor="mm"
             )
             paste(img, bubble, cx / S - 4, y + 14)
         paste(img, menu_bar(theme, mode), 0, 0)
@@ -496,14 +498,14 @@ def build_palette(theme, frames):
     return palette
 
 
-def save(theme, frames, poster_time, path):
+def save(theme, frames, poster_time, stem):
     # すべてのフレームで同じパレットを使い、ディザをかけない (動かない部分の色がちらつかず、差分だけが記録されて軽い)
     palette = build_palette(theme, frames)
     indexed = [frame.quantize(palette=palette, dither=Image.Dither.NONE) for frame in frames]
     indexed[0].save(
-        path.with_suffix(".gif"), save_all=True, append_images=indexed[1:], duration=1000 // FPS, loop=0
+        stem.with_suffix(".gif"), save_all=True, append_images=indexed[1:], duration=1000 // FPS, loop=0
     )
-    indexed[round(poster_time * FPS)].save(path.with_suffix(".png"), optimize=True)
+    indexed[round(poster_time * FPS)].save(stem.with_suffix(".png"), optimize=True)
 
 
 def main():
@@ -514,10 +516,10 @@ def main():
     for theme in (LIGHT, DARK):
         for name, demo in (("move", demo_move), ("resize", demo_resize), ("snap", demo_snap), ("input", demo_input)):
             frames, poster_time = demo(theme)
-            path = out / f"{name}{theme.suffix}"
-            save(theme, frames, poster_time, path)
-            size = path.with_suffix(".gif").stat().st_size
-            print(f"{path}.gif: {len(frames)} frames, {size / 1024:.0f} KiB")
+            stem = out / f"{name}{theme.suffix}"
+            save(theme, frames, poster_time, stem)
+            size = stem.with_suffix(".gif").stat().st_size
+            print(f"{stem}.gif: {len(frames)} frames, {size / 1024:.0f} KiB")
 
 
 if __name__ == "__main__":
